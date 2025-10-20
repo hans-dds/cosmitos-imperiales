@@ -1,0 +1,47 @@
+{
+  "name": "p_final",
+  "version": "1.0.0",
+  "main": "src/main/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "electron": "^37.2.5",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "com.clasificador.comentarios",
+    "files": [
+      "main.js",
+      "package.json",
+      "!get-pip.py",
+      "!**/*.md",
+      "!**/tests/**",
+      "!**/__pycache__/**",
+      "!**/*.pyc",
+      "!**/docs/**"
+    ],
+    "asar": false,
+    "extraResources": [
+      {
+        "from": "python312/",
+        "to": "python312"
+      },
+      {
+        "from": "main_s.py",
+        "to": "main_s.py"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}
