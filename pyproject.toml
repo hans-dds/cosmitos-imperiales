@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gssp"
+version = "0.1.0"
+
+dependencies = [
+    "streamlit==1.50.0",
+    "openpyxl==3.1.5",
+    "scikit-learn==1.7.1",
+    "plotly==6.3.1"
+]
+
+[tool.setuptools.packages.find]
+where = ["src/main"] # busca los paquetes en 'src/main'.

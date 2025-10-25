@@ -1,4 +1,19 @@
-python312/
-node_modules/
-__pycache__/
+# Entornos virtuales
+.venv/
+venv/
+Scripts/
+Lib/
+Include/
+pyvenv.cfg
 
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de instalación y build
+*.egg-info/
+build/
+dist/
+
+# Archivos de IDEs (ej. VSCode)
+.vscode/
