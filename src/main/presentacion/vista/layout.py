@@ -39,22 +39,11 @@ def show_tables(df):
 
     resumen['Porcentaje'] = (resumen['NumComentarios'] / resumen['NumComentarios'].sum()) * 100
 
-    bins = list(range(0, int(df['longitud'].max()) + 50, 50))
-    df['rango_longitud'] = pd.cut(df['longitud'], bins=bins, right=False)
-    distribucion = df.groupby(['Clasificacion', 'rango_longitud']).size().reset_index(name='conteo')
-
-    #Corregir el rango
-    if pd.api.types.is_interval_dtype(distribucion['rango_longitud']):
-        distribucion[['min', 'max']] = distribucion['rango_longitud'].apply(lambda x: pd.Series([x.left, x.right]))
-    else:
-        distribucion[['min', 'max']] = distribucion['rango_longitud'].astype(str).str.extract(r'(\d+\.?\d*),\s*(\d+\.?\d*)').astype(float)
-    distribucion.drop(columns='rango_longitud', inplace=True)
-
     #Boton de exportar a Excel
     st.markdown("---")
     st.subheader("Exportar resultados")
 
-    excel_bytes = generar_excel(df, resumen, distribucion)
+    excel_bytes = generar_excel(df, resumen)
     st.download_button(
         label="📎 Descargar reporte Excel con gráficas",
         data=excel_bytes,
