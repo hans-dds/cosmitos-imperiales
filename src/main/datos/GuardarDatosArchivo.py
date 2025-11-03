@@ -18,7 +18,7 @@ class GuardarDatosArchivo:
         os.makedirs(self.directorio_base, exist_ok=True)
         print(f"Servicio de Guardado inicializado. Los archivos se guardarán en '{self.directorio_base}/'")
 
-    def guardar_datos_limpios(self, datos: pd.DataFrame, nombre_base_archivo: str) -> bool:
+    def guardar_datos_limpios(self, datos: pd.DataFrame, nombre_base_archivo: str) -> tuple[bool, str]:
         """
         Guarda los datos limpios en formato CSV, usando un nombre de archivo dinámico.
 
@@ -28,11 +28,12 @@ class GuardarDatosArchivo:
                                        (ej. 'c_Mayo_2025').
 
         Returns:
-            bool: True si se guardó correctamente, False en caso de error.
+            tuple[bool, str]: (True, message) si se guardó correctamente, (False, error_message) en caso de error.
         """
         if not isinstance(datos, pd.DataFrame) or datos.empty:
-            print("Error: No se proporcionaron datos válidos para guardar.")
-            return False
+            msg = "Error: No se proporcionaron datos válidos para guardar."
+            print(msg)
+            return False, msg
             
         # Construir la ruta completa del archivo
         ruta_completa = os.path.join(self.directorio_base, f"{nombre_base_archivo}_limpio.csv")
@@ -40,11 +41,13 @@ class GuardarDatosArchivo:
         print(f"Intentando guardar datos en: '{ruta_completa}'")
         try:
             datos.to_csv(ruta_completa, index=False, encoding='utf-8-sig')
-            print(f"¡Éxito! Datos guardados correctamente en '{ruta_completa}'.")
-            return True
+            msg = f"¡Éxito! Datos guardados correctamente en '{ruta_completa}'."
+            print(msg)
+            return True, msg
         except Exception as e:
-            print(f"ERROR: No se pudo guardar el archivo. Razón: {e}")
-            return False
+            msg = f"ERROR: No se pudo guardar el archivo. Razón: {e}"
+            print(msg)
+            return False, msg
 
     def crear_respaldo(self, datos: pd.DataFrame, nombre_base_archivo: str) -> bool:
         """
