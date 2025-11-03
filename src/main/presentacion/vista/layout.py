@@ -67,3 +67,50 @@ def upload_file_view():
     st.sidebar.header("📁 Cargar archivo")
     archivo = st.sidebar.file_uploader("Sube un archivo CSV o Excel", type=["csv", "xlsx"])
     return archivo
+
+
+def show_comments_table(df):
+    """
+    Muestra una tabla filtrable por clase con un selector y un slider para
+    controlar cuántos comentarios se muestran.
+
+    Requisitos del DataFrame: columnas 'Clasificacion', 'comentarios', 'calificacion', 'longitud'
+    """
+    required_columns = {'Clasificacion', 'comentarios', 'calificacion', 'longitud'}
+
+    if not required_columns.issubset(df.columns):
+        st.error("El DataFrame no contiene las columnas necesarias para mostrar la tabla de comentarios filtrados.")
+        return
+
+    st.subheader("Tabla de comentarios filtrados")
+
+    # Obtener clases disponibles (sin valores nulos)
+    clases = [c for c in sorted(df['Clasificacion'].dropna().unique().tolist())]
+    opciones = ['Todas'] + clases
+
+    clase_seleccionada = st.selectbox("Seleccionar clase", opciones, index=0, help="Filtra los comentarios por la clase seleccionada")
+
+    max_comentarios = int(df.shape[0]) if df.shape[0] > 0 else 10
+    default_show = min(10, max_comentarios)
+    cantidad = st.slider("Cantidad de comentarios a mostrar", min_value=10, max_value=max(10, max_comentarios), value=default_show, step=10)
+
+    if clase_seleccionada == 'Todas':
+        df_filtrado = df.copy()
+    else:
+        df_filtrado = df[df['Clasificacion'] == clase_seleccionada]
+
+    # Ordenar por longitud (más largos primero) y limitar según slider
+    df_mostrar = (
+        df_filtrado.sort_values(by='longitud', ascending=False)
+        .head(cantidad)
+    )
+
+    if df_mostrar.empty:
+        st.info("No hay comentarios para la selección actual.")
+        return
+
+    st.dataframe(
+        df_mostrar[['calificacion', 'comentarios', 'Clasificacion']].rename(columns={'calificacion': 'Calificación', 'comentarios': 'Comentario', 'Clasificacion': 'Clasificación'}),
+        use_container_width=True,
+        hide_index=True
+    )

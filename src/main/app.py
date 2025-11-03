@@ -1,7 +1,7 @@
 from presentacion.vista.charts import mostrar_graficos
 import streamlit as st
 from presentacion.controlador.loader import get_services, process_uploaded_file
-from presentacion.vista.layout import show_header, show_tables
+from presentacion.vista.layout import show_header, show_tables, show_comments_table
 import presentacion.vista.config_app_ui as cau
 from presentacion.vista.layout import upload_file_view
 from presentacion.vista.utils import color_discrete_map
@@ -44,7 +44,7 @@ if 'df_actual' in st.session_state:
     else:
         df_display['longitud'] = 0
     mostrar_graficos(df_display, color_discrete_map)
-    show_tables(df_display)
+    show_comments_table(df_display)
 
 
 st.markdown("---")
@@ -77,7 +77,7 @@ if archivo:
 
             # Display new analysis
             mostrar_graficos(df, color_discrete_map)
-            show_tables(df)
+            show_comments_table(df)
 
         elif df is not None and df.empty:
             st.warning("El archivo se procesó, pero no se encontraron "
