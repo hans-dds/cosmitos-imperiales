@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from presentacion.logica.exportador_excel import generar_excel
+from presentacion.Logica.exportador_excel import generar_excel
 
 def show_header():
     st.title("Gestor de Satisfacción y Seguimiento de Posventa")
