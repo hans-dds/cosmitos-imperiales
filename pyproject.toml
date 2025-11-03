@@ -14,7 +14,10 @@ dependencies = [
     "mysql-connector-python==8.0.33",
     "pytest==7.4.0",
     "pytest-cov==4.1.0",
+<<<<<<< HEAD
     "pdfkit",
+=======
+>>>>>>> 1cef1e46b90b15000b011bfd2deeb3f7b9cf7537
     "xlsxwriter"
 ]
 
