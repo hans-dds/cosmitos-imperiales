@@ -1,7 +1,7 @@
 from presentacion.vista.charts import mostrar_graficos
 import streamlit as st
 from presentacion.controlador.loader import get_services, process_uploaded_file
-from presentacion.vista.layout import show_header, show_tables, show_comments_table
+from presentacion.vista.layout import show_header, show_tables, show_comments_table, show_export_button
 import presentacion.vista.config_app_ui as cau
 from presentacion.vista.layout import upload_file_view
 from presentacion.vista.utils import color_discrete_map
@@ -32,9 +32,6 @@ else:
         else:
             st.sidebar.error("No se pudieron cargar los datos del análisis.")
 
-# --- Main view ---
-st.title("Análisis de Sentimientos")
-
 # Display loaded analysis from sidebar
 if 'df_actual' in st.session_state:
     st.subheader(f"Mostrando análisis: {st.session_state['analisis_actual']}")
@@ -43,11 +40,12 @@ if 'df_actual' in st.session_state:
         df_display['longitud'] = df_display['comentarios'].str.len()
     else:
         df_display['longitud'] = 0
-    mostrar_graficos(df_display, color_discrete_map)
     show_comments_table(df_display)
+    mostrar_graficos(df_display, color_discrete_map)
+    show_export_button(df_display)
 
 
-st.markdown("---")
+#st.markdown("---")
 
 # File uploader
 archivo = upload_file_view()
@@ -56,10 +54,14 @@ if archivo:
 
     if valido:
         st.sidebar.success(mensaje)
-        st.subheader("Resultados del Nuevo Análisis")
+        #st.subheader("Resultados del Nuevo Análisis")
         df = datos
         if df is not None and not df.empty:
-            st.dataframe(df.head(5), use_container_width=True, hide_index=True)
+            #st.dataframe(df.head(5), use_container_width=True, hide_index=True)
+            show_comments_table(df)
+            mostrar_graficos(df, color_discrete_map)
+            show_export_button(df)
+
             if st.button("Guardar Resultados"):
                 file_name_base = archivo.name.split('.')[0]
                 table_name = f"analisis_{file_name_base}"
@@ -70,14 +72,12 @@ if archivo:
                     st.success("Resultados guardados exitosamente.")
                     st.info(mensaje_guardado)
                     # Refresh saved analyses list
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Error al guardar los resultados.")
                     st.warning(mensaje_guardado)
 
-            # Display new analysis
-            mostrar_graficos(df, color_discrete_map)
-            show_comments_table(df)
+
 
         elif df is not None and df.empty:
             st.warning("El archivo se procesó, pero no se encontraron "
