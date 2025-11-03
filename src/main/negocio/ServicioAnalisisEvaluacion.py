@@ -26,8 +26,7 @@ class ServicioAnalisisEvaluacion:
             traceback.print_exc()
             self.modelo = None
 
-        # ATENCION: Externalizar la configuración de la base de datos
-        # en un entorno de producción
+        # TODO: Externalize database configuration
         db_config = {
             'host': 'localhost',
             'user': 'user',
@@ -88,35 +87,3 @@ class ServicioAnalisisEvaluacion:
 
     def cargar_analisis_por_nombre(self, nombre_tabla: str) -> pd.DataFrame:
         return self.servicio_almacenamiento.cargar_analisis_por_nombre(nombre_tabla)
-
-
-if __name__ == "__main__":
-
-    # --- Configuración ---
-    RUTA_MODELO_FINAL = 'clasificador_sentimiento_final.pkl'
-    ARCHIVO_ENTRADA = 'comentarios_limpios_y_procesados.csv'
-    NOMBRE_BASE_ARCHIVO_SALIDA = 'datos_con_prediccion_clase'
-    NOMBRE_TABLA_SALIDA = 'analisis_sentimientos'
-
-    try:
-        servicio_analisis = ServicioAnalisisEvaluacion(ruta_modelo=RUTA_MODELO_FINAL)
-
-        # 2. Cargar los datos que queremos clasificar
-        df_a_predecir = pd.read_csv(ARCHIVO_ENTRADA)
-        print(f"\nArchivo '{ARCHIVO_ENTRADA}' cargado para predicción.")
-
-        # 3. Llamar al método para realizar el análisis
-        df_con_predicciones = servicio_analisis.realizar_analisis_sentimientos(df_a_predecir)
-
-        # 4. Mostrar y guardar los resultados
-        print("\n--- Vista previa de los resultados ---")
-        print(df_con_predicciones.head().to_string())
-
-        # 5. Guardar los resultados
-        success, message = servicio_analisis.guardar_analisis(
-            df_con_predicciones, NOMBRE_BASE_ARCHIVO_SALIDA, NOMBRE_TABLA_SALIDA
-        )
-        print(message)
-
-    except Exception as e:
-        print(f"Ocurrió un error en el proceso principal: {e}")

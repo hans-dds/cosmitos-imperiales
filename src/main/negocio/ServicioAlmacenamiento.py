@@ -80,33 +80,3 @@ class ServicioAlmacenamiento:
         except Error as e:
             print(f"Error al cargar los datos del análisis '{nombre_tabla}': {e}")
             return pd.DataFrame()
-
-
-if __name__ == '__main__':
-    # Ejemplo de uso
-    # ATENCION: Externalizar la configuración de la base de datos en un entorno de producción
-    db_config_ejemplo = {
-        "host": "localhost",
-        "user": "user",
-        "password": "password",
-        "database": "cosmitos_imperiales_db",
-    }
-
-    # Crear datos de ejemplo
-    data_ejemplo = {
-        'comentarios': ['Este es un buen producto', 'No me gustó el servicio', 'Es aceptable'],
-        'calificacion': [5.0, 2.0, 3.0],
-        'Clasificacion': ['Positivo', 'Negativo', 'Neutro']
-    }
-    df_ejemplo = pd.DataFrame(data_ejemplo)
-
-    # Inicializar servicio de almacenamiento
-    servicio_almacenamiento = ServicioAlmacenamiento(db_config=db_config_ejemplo)
-
-    # Guardar en CSV
-    _, msg_csv = servicio_almacenamiento.guardar_analisis_csv(df_ejemplo, 'analisis_ejemplo')
-    print(msg_csv)
-
-    # Guardar en MySQL
-    _, msg_mysql = servicio_almacenamiento.guardar_analisis_mysql(df_ejemplo, 'analisis_sentimientos')
-    print(msg_mysql)

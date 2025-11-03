@@ -17,3 +17,6 @@ dist/
 
 # Archivos de IDEs (ej. VSCode)
 .vscode/
+
+# Archivos de contexto para LLM
+LLM/*
