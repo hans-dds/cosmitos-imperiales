@@ -20,3 +20,5 @@ dist/
 
 # Archivos de contexto para LLM
 LLM/*
+
+estructura.md
