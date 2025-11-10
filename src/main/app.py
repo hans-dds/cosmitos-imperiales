@@ -5,6 +5,7 @@ from presentacion.vista.layout import show_header, show_tables, show_comments_ta
 import presentacion.vista.config_app_ui as cau
 from presentacion.vista.layout import upload_file_view
 from presentacion.vista.utils import color_discrete_map
+from presentacion.vista.sugerencias_view import mostrar_sugerencias
 import pandas as pd
 
 
@@ -43,6 +44,11 @@ if 'df_actual' in st.session_state:
     show_comments_table(df_display)
     mostrar_graficos(df_display, color_discrete_map)
     show_export_button(df_display)
+
+# Mostrar sugerencias basadas en los comentarios cargados
+    if "df_actual" in st.session_state:
+        df_display = st.session_state["df_actual"]
+        mostrar_sugerencias(df_display)
 
 
 #st.markdown("---")
