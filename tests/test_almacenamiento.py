@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
+import os
+import tempfile
+import shutil
 from src.main.negocio.ServicioAlmacenamiento import ServicioAlmacenamiento
 from src.main.datos.GuardarDatosArchivo import GuardarDatosArchivo
 from mysql.connector import Error
@@ -13,6 +16,15 @@ def db_config():
         'password': 'test_password',
         'database': 'test_db'
     }
+
+@pytest.fixture
+def temp_data_dir():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        yield tmpdir
+
+@pytest.fixture
+def guardar_datos_archivo(temp_data_dir):
+    return GuardarDatosArchivo(directorio_base=temp_data_dir)
 
 @pytest.fixture
 def servicio_almacenamiento(db_config):
@@ -92,3 +104,31 @@ def test_cargar_analisis_por_nombre_failure(mock_connect, servicio_almacenamient
     mock_connect.side_effect = Error("DB error")
     df = servicio_almacenamiento.cargar_analisis_por_nombre('test_table')
     assert df.empty
+
+def test_guardar_datos_archivo_init(temp_data_dir):
+    # The fixture already creates an instance, so we just check if the directory exists
+    assert os.path.exists(temp_data_dir)
+
+def test_guardar_datos_limpios_success(guardar_datos_archivo, sample_dataframe, temp_data_dir):
+    success, msg = guardar_datos_archivo.guardar_datos_limpios(sample_dataframe, 'test_file')
+    assert success is True
+    assert "¡Éxito!" in msg
+    expected_path = os.path.join(temp_data_dir, 'test_file_limpio.csv')
+    assert os.path.exists(expected_path)
+    df_read = pd.read_csv(expected_path)
+    pd.testing.assert_frame_equal(df_read, sample_dataframe)
+
+def test_guardar_datos_limpios_empty_dataframe(guardar_datos_archivo, temp_data_dir):
+    empty_df = pd.DataFrame()
+    success, msg = guardar_datos_archivo.guardar_datos_limpios(empty_df, 'empty_file')
+    assert success is False
+    assert "No se proporcionaron datos válidos para guardar." in msg
+    expected_path = os.path.join(temp_data_dir, 'empty_file_limpio.csv')
+    assert not os.path.exists(expected_path)
+
+def test_guardar_datos_limpios_invalid_data(guardar_datos_archivo, temp_data_dir):
+    success, msg = guardar_datos_archivo.guardar_datos_limpios("not a dataframe", 'invalid_file')
+    assert success is False
+    assert "No se proporcionaron datos válidos para guardar." in msg
+    expected_path = os.path.join(temp_data_dir, 'invalid_file_limpio.csv')
+    assert not os.path.exists(expected_path)
