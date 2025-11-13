@@ -4,7 +4,7 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 class LoadAnalysisUseCase:
     """
-    This use case retrieves a specific saved analysis by its name.
+    Este caso de uso recupera un análisis guardado específico por su nombre.
     """
 
     def __init__(self, analysis_repository: IAnalysisRepository):
@@ -12,12 +12,12 @@ class LoadAnalysisUseCase:
 
     def execute(self, analysis_name: str) -> pd.DataFrame:
         """
-        Executes the use case.
+        Ejecuta el caso de uso.
 
         Args:
-            analysis_name: The name of the analysis to load.
+            analysis_name: El nombre del análisis a cargar.
 
         Returns:
-            A DataFrame containing the loaded analysis data.
+            Un DataFrame que contiene los datos del análisis cargado.
         """
         return self._analysis_repository.load_analysis(analysis_name)

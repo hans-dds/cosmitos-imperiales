@@ -6,25 +6,25 @@ from use_cases.list_analyses_use_case import ListAnalysesUseCase
 def show_sidebar(list_analyses_use_case: ListAnalysesUseCase) \
         -> Tuple[Optional[object], Optional[str]]:
     """
-    Renders the sidebar UI, including the file uploader and the list of
-    saved analyses.
+    Renderiza la interfaz de usuario de la barra lateral, incluyendo el
+    cargador de archivos y la lista de análisis guardados.
 
     Args:
-        list_analyses_use_case: The use case for listing saved analyses.
+        list_analyses_use_case: El caso de uso para listar análisis guardados.
 
     Returns:
-        A tuple containing the uploaded file object and the name of the
-        analysis to load, or None for either if not applicable.
+        Una tupla que contiene el objeto de archivo cargado y el nombre del
+        análisis a cargar, o None para cualquiera si no aplica.
     """
     st.sidebar.title("Controles")
     analysis_to_load = None
 
-    # --- File Uploader ---
+    # --- Cargador de Archivos ---
     st.sidebar.header("📁 Cargar y Analizar Archivo")
     uploaded_file = st.sidebar.file_uploader(
         "Sube un archivo CSV o Excel", type=["csv", "xlsx"])
 
-    # --- Saved Analyses ---
+    # --- Análisis Guardados ---
     st.sidebar.header("📂 Ver Análisis Guardado")
     saved_analyses = list_analyses_use_case.execute()
     if not saved_analyses:

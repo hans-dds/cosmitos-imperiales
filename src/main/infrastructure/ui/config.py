@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def config_page():
-    """Sets Streamlit page configuration."""
+    """Configura la página de Streamlit."""
     st.set_page_config(page_title="GSSP", layout="wide")
     st.markdown("""
         <style>

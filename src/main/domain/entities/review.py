@@ -6,7 +6,7 @@ from domain.value_objects.sentiment import Sentiment
 @dataclass(frozen=True)
 class Review:
     """
-    Represents a single customer review before analysis.
+    Representa una única reseña de cliente antes del análisis.
     """
     comment: str
     rating: int
@@ -15,6 +15,6 @@ class Review:
 @dataclass(frozen=True)
 class AnalyzedReview(Review):
     """
-    Represents a review after it has been analyzed and classified.
+    Representa una reseña después de haber sido analizada y clasificada.
     """
     sentiment: Sentiment

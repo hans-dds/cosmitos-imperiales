@@ -4,22 +4,22 @@ import pandas as pd
 
 class ISentimentAnalyzer(ABC):
     """
-    Port (Interface) for a service that performs sentiment
-    analysis on review data.
+    Puerto (Interfaz) para un servicio que realiza análisis de
+    sentimientos en datos de reseñas.
     """
 
     @abstractmethod
     def analyze(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes a DataFrame with cleaned reviews and returns
-        it with sentiment predictions.
+        Toma un DataFrame con reseñas limpias y lo devuelve con
+        predicciones de sentimiento.
 
         Args:
-            data: DataFrame containing at least 'comentarios'
-            and 'calificacion' columns.
+            data: DataFrame que contiene al menos las columnas 'comentarios'
+            y 'calificacion'.
 
         Returns:
-            A DataFrame with an added 'Clasificacion' column
-            containing sentiment predictions.
+            Un DataFrame con una columna añadida 'Clasificacion'
+            que contiene las predicciones de sentimiento.
         """
         pass

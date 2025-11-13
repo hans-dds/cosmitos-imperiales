@@ -4,19 +4,19 @@ import pandas as pd
 
 class IDataCleaner(ABC):
     """
-    Port (Interface) for a service that cleans review data.
+    Puerto (Interfaz) para un servicio que limpia datos de reseñas.
     """
 
     @abstractmethod
     def clean_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes a raw DataFrame and returns a cleaned version of it.
+        Toma un DataFrame sin procesar y devuelve una versión limpia del mismo.
 
         Args:
-            raw_data: DataFrame containing at least 'comentarios'
-            and 'calificacion' columns.
+            raw_data: DataFrame que contiene al menos las columnas 'comentarios'
+            y 'calificacion'.
 
         Returns:
-            A cleaned DataFrame ready for analysis.
+            Un DataFrame limpio y listo para el análisis.
         """
         pass

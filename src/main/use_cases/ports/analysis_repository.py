@@ -5,21 +5,21 @@ from typing import List, Tuple
 
 class IAnalysisRepository(ABC):
     """
-    Port (Interface) for a repository that handles
-    persistence of analysis results.
+    Puerto (Interfaz) para un repositorio que maneja la persistencia
+    de los resultados del análisis.
     """
 
     @abstractmethod
     def save_csv(self, data: pd.DataFrame, file_name: str) -> Tuple[bool, str]:
         """
-        Saves the analysis data to a CSV file.
+        Guarda los datos del análisis en un archivo CSV.
 
         Args:
-            data: The DataFrame to save.
-            file_name: The base name for the output file.
+            data: El DataFrame a guardar.
+            file_name: El nombre base para el archivo de salida.
 
         Returns:
-            A tuple containing a success flag and a message.
+            Una tupla que contiene un indicador de éxito y un mensaje.
         """
         pass
 
@@ -28,36 +28,36 @@ class IAnalysisRepository(ABC):
                    data: pd.DataFrame,
                    table_name: str) -> Tuple[bool, str]:
         """
-        Saves the analysis data to a MySQL table.
+        Guarda los datos del análisis en una tabla de MySQL.
 
         Args:
-            data: The DataFrame to save.
-            table_name: The name of the table to save the data into.
+            data: El DataFrame a guardar.
+            table_name: El nombre de la tabla donde se guardarán los datos.
 
         Returns:
-            A tuple containing a success flag and a message.
+            Una tupla que contiene un indicador de éxito y un mensaje.
         """
         pass
 
     @abstractmethod
     def list_analyses(self) -> List[str]:
         """
-        Lists the names of previously saved analyses (e.g., tables in the DB).
+        Lista los nombres de los análisis guardados previamente (ej. tablas en la BD).
 
         Returns:
-            A list of analysis names.
+            Una lista de nombres de análisis.
         """
         pass
 
     @abstractmethod
     def load_analysis(self, name: str) -> pd.DataFrame:
         """
-        Loads a specific analysis by its name.
+        Carga un análisis específico por su nombre.
 
         Args:
-            name: The name of the analysis to load.
+            name: El nombre del análisis a cargar.
 
         Returns:
-            A DataFrame containing the analysis data.
+            Un DataFrame que contiene los datos del análisis.
         """
         pass

@@ -5,28 +5,28 @@ import unicodedata
 
 def clean_text(text: str) -> str | None:
     """
-    Applies all cleaning rules to a single string of text.
-    - Converts to lowercase
-    - Removes accents
-    - Removes punctuation
-    - Removes extra whitespace and newlines
+    Aplica todas las reglas de limpieza a una única cadena de texto.
+    - Convierte a minúsculas
+    - Elimina acentos
+    - Elimina puntuación
+    - Elimina espacios en blanco y saltos de línea extra
 
-    Returns the cleaned text or None if the input is invalid or empty.
+    Devuelve el texto limpio o None si la entrada es inválida o está vacía.
     """
     if not isinstance(text, str) or not text.strip():
         return None
 
-    # 1. Convert to lowercase
+    # 1. Convertir a minúsculas
     text = text.lower()
 
-    # 2. Remove accents
+    # 2. Eliminar acentos
     nfkd_form = unicodedata.normalize('NFD', text)
     text = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
-    # 3. Remove punctuation
+    # 3. Eliminar puntuación
     text = re.sub(f'[{re.escape(string.punctuation)}]', ' ', text)
 
-    # 4. Remove newlines and extra spaces
+    # 4. Eliminar saltos de línea y espacios extra
     text = re.sub(r'\s+', ' ', text).strip()
 
     return text if text else None

@@ -7,8 +7,8 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 class ProcessFileUseCase:
     """
-    This use case orchestrates the cleaning, analysis, and storage of review
-    data from a file.
+    Este caso de uso orquesta la limpieza, análisis y almacenamiento de datos
+    de reseñas desde un archivo.
     """
 
     def __init__(
@@ -26,27 +26,27 @@ class ProcessFileUseCase:
             raw_data: pd.DataFrame,
             file_basename: str) -> pd.DataFrame:
         """
-        Executes the use case.
+        Ejecuta el caso de uso.
 
         Args:
-            raw_data: The raw DataFrame read from the uploaded file.
-            file_basename: The base name of the original file
-            (e.g., 'c_Abril_2025').
+            raw_data: El DataFrame sin procesar leído del archivo subido.
+            file_basename: El nombre base del archivo original
+            (ej., 'c_Abril_2025').
 
         Returns:
-            The DataFrame containing the analyzed data.
+            El DataFrame que contiene los datos analizados.
         """
-        # 1. Clean the data
+        # 1. Limpiar los datos
         cleaned_data = self._data_cleaner.clean_data(raw_data)
         if cleaned_data.empty:
-            raise ValueError("Data is empty after cleaning process.")
+            raise ValueError("Los datos están vacíos después del proceso de limpieza.")
 
-        # 2. Analyze sentiment
+        # 2. Analizar sentimiento
         analyzed_data = self._sentiment_analyzer.analyze(cleaned_data)
         if analyzed_data.empty:
-            raise ValueError("Data is empty after sentiment analysis.")
+            raise ValueError("Los datos están vacíos después del análisis de sentimiento.")
 
-        # 3. Save the results
+        # 3. Guardar los resultados
         table_name = f"analisis_{file_basename}"
         self._analysis_repository.save_csv(analyzed_data, file_basename)
         self._analysis_repository.save_mysql(analyzed_data, table_name)

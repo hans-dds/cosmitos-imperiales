@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 class Container:
     """
-    A simple dependency injection container for creating and wiring up
-    services.
+    Un contenedor de inyección de dependencias simple para crear y conectar
+    servicios.
     """
 
     def __init__(self):
-        # Create instances of our adapters
+        # Crear instancias de nuestros adaptadores
 
-        # 1. Repository Adapter
+        # 1. Adaptador de Repositorio
         db_config = {
             'host': settings.DB_HOST,
             'user': settings.DB_USER,
@@ -32,27 +32,27 @@ class Container:
             'database': settings.DB_NAME
         }
 
-        logger.info("Initializing SQLandCSVAnalysisRepository with DB config: "
+        logger.info("Inicializando SQLandCSVAnalysisRepository con la configuración de BD: "
                     f"{db_config}")
 
         self._analysis_repository = SQLandCSVAnalysisRepository(
             db_config=db_config)
 
-        # 2. Sentiment Analyzer Adapter
-        # The path to the model should also be in the settings/config.
-        # For now, I'll hardcode the path as it was in the original structure.
+        # 2. Adaptador de Analizador de Sentimiento
+        # La ruta al modelo también debería estar en la configuración.
+        # Por ahora, la codificaré como estaba en la estructura original.
         model_path = "src/main/clasificador_sentimiento_final.pkl"
         self._sentiment_analyzer = JoblibSentimentAnalyzer(
             model_path=model_path)
 
-        # 3. Data Cleaner Adapter
+        # 3. Adaptador de Limpiador de Datos
         self._data_cleaner = PandasDataCleaner()
 
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
         """
-        Creates and returns an instance of the ProcessFileUseCase with all
-        dependencies injected.
+        Crea y devuelve una instancia de ProcessFileUseCase con todas las
+        dependencias inyectadas.
         """
         return ProcessFileUseCase(
             data_cleaner=self._data_cleaner,
@@ -63,7 +63,7 @@ class Container:
     @property
     def list_analyses_use_case(self) -> ListAnalysesUseCase:
         """
-        Creates and returns an instance of the ListAnalysesUseCase.
+        Crea y devuelve una instancia de ListAnalysesUseCase.
         """
         return ListAnalysesUseCase(
             analysis_repository=self._analysis_repository)
@@ -71,11 +71,11 @@ class Container:
     @property
     def load_analysis_use_case(self) -> LoadAnalysisUseCase:
         """
-        Creates and returns an instance of the LoadAnalysisUseCase.
+        Crea y devuelve una instancia de LoadAnalysisUseCase.
         """
         return LoadAnalysisUseCase(
             analysis_repository=self._analysis_repository)
 
 
-# A global instance of the container that the app can use
+# Una instancia global del contenedor que la aplicación puede usar
 container = Container()

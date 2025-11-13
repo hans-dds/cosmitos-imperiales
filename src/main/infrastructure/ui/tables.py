@@ -2,10 +2,10 @@ import streamlit as st
 
 
 def show_comments_table(df):
-    """Displays a filterable table of comments."""
+    """Muestra una tabla filtrable de comentarios."""
     st.subheader("Comentarios Filtrados")
     if 'Clasificacion' not in df.columns:
-        st.warning("No classification data to display.")
+        st.warning("No hay datos de clasificación para mostrar.")
         return
 
     categories = ['Todas'] + sorted(

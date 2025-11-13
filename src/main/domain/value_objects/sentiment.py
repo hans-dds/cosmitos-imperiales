@@ -3,7 +3,7 @@ from enum import Enum
 
 class Sentiment(Enum):
     """
-    Represents the possible sentiment classifications for a review.
+    Representa las posibles clasificaciones de sentimiento para una reseña.
     """
     POSITIVE = "Positivo"
     NEGATIVE = "Negativo"
@@ -12,9 +12,9 @@ class Sentiment(Enum):
     @classmethod
     def from_string(cls, value: str):
         """
-        Creates a Sentiment member from its string representation.
+        Crea un miembro de Sentiment a partir de su representación en cadena.
         """
         for member in cls:
             if member.value.lower() == value.lower():
                 return member
-        raise ValueError(f"'{value}' is not a valid sentiment string.")
+        raise ValueError(f"'{value}' no es una cadena de sentimiento válida.")

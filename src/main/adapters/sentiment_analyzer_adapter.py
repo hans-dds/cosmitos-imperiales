@@ -6,36 +6,36 @@ from use_cases.ports.sentiment_analyzer import ISentimentAnalyzer
 
 class JoblibSentimentAnalyzer(ISentimentAnalyzer):
     """
-    A concrete implementation of ISentimentAnalyzer that uses a model
-    loaded from a .pkl file with joblib.
+    Una implementación concreta de ISentimentAnalyzer que utiliza un modelo
+    cargado desde un archivo .pkl con joblib.
     """
 
     def __init__(self, model_path: str):
         try:
             self._model = joblib.load(model_path)
-            print(f"Sentiment analysis model loaded from '{model_path}'.")
+            print(f"Modelo de análisis de sentimiento cargado desde '{model_path}'.")
         except FileNotFoundError:
             raise RuntimeError(
-                f"CRITICAL: Model file not found at '{model_path}'.")
+                f"CRÍTICO: No se encontró el archivo del modelo en '{model_path}'.")
         except Exception as e:
             raise RuntimeError(
-                f"CRITICAL: Failed to load model from '{model_path}'.\n"
-                f"Reason: {e}")
+                f"CRÍTICO: Falló la carga del modelo desde '{model_path}'.\n"
+                f"Razón: {e}")
 
     def analyze(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Performs sentiment analysis using the loaded joblib model.
+        Realiza análisis de sentimiento utilizando el modelo joblib cargado.
         """
         if not all(col in data.columns
                    for col in ['comentarios', 'calificacion']):
-            raise ValueError("Input DataFrame must have 'comentarios'"
-                             " and 'calificacion' columns.")
+            raise ValueError("El DataFrame de entrada debe tener las columnas"
+                             " 'comentarios' y 'calificacion'.")
 
         if data.empty:
-            print("Warning: No data to analyze.")
+            print("Advertencia: No hay datos para analizar.")
             return data
 
-        # The model expects specific columns for prediction
+        # El modelo espera columnas específicas para la predicción
         X_to_predict = data[['comentarios', 'calificacion']]
 
         predictions = self._model.predict(X_to_predict)

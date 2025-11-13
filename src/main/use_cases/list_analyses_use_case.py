@@ -4,7 +4,7 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 class ListAnalysesUseCase:
     """
-    This use case retrieves the list of all previously saved analyses.
+    Este caso de uso recupera la lista de todos los análisis guardados previamente.
     """
 
     def __init__(self, analysis_repository: IAnalysisRepository):
@@ -12,9 +12,9 @@ class ListAnalysesUseCase:
 
     def execute(self) -> List[str]:
         """
-        Executes the use case.
+        Ejecuta el caso de uso.
 
         Returns:
-            A list of names of the saved analyses.
+            Una lista de nombres de los análisis guardados.
         """
         return self._analysis_repository.list_analyses()

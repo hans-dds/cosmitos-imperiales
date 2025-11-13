@@ -6,39 +6,39 @@ from domain.services.text_cleaner import clean_text
 
 class PandasDataCleaner(IDataCleaner):
     """
-    A concrete implementation of IDataCleaner that uses pandas and the domain's
-    text cleaning service.
+    Una implementación concreta de IDataCleaner que utiliza pandas y el
+    servicio de limpieza de texto del dominio.
     """
 
     def clean_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
         """
-        Cleans the review data in a pandas DataFrame.
+        Limpia los datos de reseñas en un DataFrame de pandas.
         """
         df = raw_data.copy()
 
-        # Standardize column names
+        # Estandarizar nombres de columnas
         df.rename(
             columns={'Calificacion': 'calificacion',
                      'Comentarios': 'comentarios'}, inplace=True)
 
-        # Clean ratings
+        # Limpiar calificaciones
         df['calificacion'] = pd.to_numeric(df['calificacion'], errors='coerce')
         df.dropna(subset=['calificacion'], inplace=True)
         df['calificacion'] = df['calificacion'].astype('Int8')
 
-        # Clean comments using the domain service
+        # Limpiar comentarios usando el servicio de dominio
         df['comentarios'] = df['comentarios'].apply(clean_text)
         df.dropna(subset=['comentarios'], inplace=True)
 
-        # Filter irrelevant comments
+        # Filtrar comentarios irrelevantes
         df = self._filter_irrelevant_comments(df)
 
-        print(f"Cleaning complete. {len(df)} valid comments remaining.")
+        print(f"Limpieza completada. {len(df)} comentarios válidos restantes.")
         return df
 
     def _filter_irrelevant_comments(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Filters out comments that do not provide meaningful feedback.
+        Filtra los comentarios que no proporcionan retroalimentación significativa.
         """
         irrelevant_patterns = [
             r'^solo califica',

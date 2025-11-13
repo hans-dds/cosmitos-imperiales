@@ -3,19 +3,19 @@ import pandas as pd
 
 
 def generate_excel_export(df):
-    """Generates an Excel file from the DataFrame and returns its bytes."""
+    """Genera un archivo Excel a partir del DataFrame y devuelve sus bytes."""
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False, sheet_name='DatosCompletos')
 
-        # Add a summary sheet
+        # Añadir una hoja de resumen
         summary = df.groupby('Clasificacion').agg(
             NumComentarios=('comentarios', 'count'),
             LongitudPromedio=('longitud', 'mean')
         ).reset_index()
         summary.to_excel(writer, index=False, sheet_name='Resumen')
 
-        # Add charts to the summary sheet
+        # Añadir gráficos a la hoja de resumen
         workbook = writer.book
         ws_summary = writer.sheets['Resumen']
 

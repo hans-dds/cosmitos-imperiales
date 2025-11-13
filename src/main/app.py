@@ -10,35 +10,35 @@ from infrastructure.ui.tables import show_comments_table
 
 
 def main():
-    """The main function that runs the Streamlit application."""
+    """La función principal que ejecuta la aplicación Streamlit."""
     config_page()
     st.title("Gestor de Satisfacción y Seguimiento de Posventa")
 
-    # Get services from the container
+    # Obtener servicios del contenedor
     process_use_case = container.process_file_use_case
     list_analyses_use_case = container.list_analyses_use_case
     load_analysis_use_case = container.load_analysis_use_case
 
-    # Render sidebar and get user input
+    # Renderizar barra lateral y obtener entrada del usuario
     uploaded_file, analysis_to_load = show_sidebar(list_analyses_use_case)
 
-    # --- Main Content Area ---
+    # --- Área de Contenido Principal ---
 
-    # Logic for loading a saved analysis
+    # Lógica para cargar un análisis guardado
     if analysis_to_load:
         st.session_state.df_display = load_analysis_use_case.execute(
             analysis_to_load)
         st.session_state.analysis_name = analysis_to_load
 
-    # Logic for processing a new file
+    # Lógica para procesar un nuevo archivo
     if uploaded_file:
         file_basename = uploaded_file.name.split('.')[0]
         try:
-            # Read file into DataFrame
+            # Leer archivo en DataFrame
             if uploaded_file.type == "text/csv":
                 raw_df = pd.read_csv(uploaded_file)
             else:
-                # This logic was in the old `ServicioLimpiarDatos`
+                # Esta lógica estaba en el antiguo `ServicioLimpiarDatos`
                 raw_df_dict = pd.read_excel(uploaded_file, sheet_name=None)
                 required_sheets = ["ATC", "Encuesta salida"]
                 df_list = [
@@ -60,7 +60,7 @@ def main():
         except Exception as e:
             st.error(f"Ocurrió un error al procesar el archivo: {e}")
 
-    # Display the current DataFrame (either newly processed or loaded)
+    # Mostrar el DataFrame actual (recién procesado o cargado)
     if 'df_display' in st.session_state:
         st.header(st.session_state.analysis_name)
         df_to_show = st.session_state.df_display
