@@ -15,7 +15,8 @@ dependencies = [
     "pytest==9.0.1",
     "pytest-cov==7.0.0",
     "pdfkit",
-    "xlsxwriter"
+    "xlsxwriter",
+    "python-dotenv==1.2.1"
 ]
 
 [tool.setuptools.packages.find]
