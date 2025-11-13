@@ -1,4 +1,4 @@
-from src.main.config import Settings
+from src.main.config import settings
 import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
@@ -11,10 +11,10 @@ from mysql.connector import Error
 @pytest.fixture
 def db_config():
     return {
-        'host': Settings.DB_HOST,
-        'user': Settings.DB_USER,
-        'password': Settings.DB_PASSWORD,
-        'database': Settings.DB_NAME
+        'host': settings.DB_HOST,
+        'user': settings.DB_USER,
+        'password': settings.DB_PASSWORD,
+        'database': settings.DB_NAME
     }
 
 

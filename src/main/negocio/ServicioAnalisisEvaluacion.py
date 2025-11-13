@@ -1,4 +1,4 @@
-from src.main.config import Settings
+from src.main.config import settings
 import pandas as pd
 import joblib
 import os
@@ -28,10 +28,10 @@ class ServicioAnalisisEvaluacion:
             self.modelo = None
 
         db_config = {
-            'host': Settings.DB_HOST,
-            'user': Settings.DB_USER,
-            'password': Settings.DB_PASSWORD,
-            'database': Settings.DB_NAME
+            'host': settings.DB_HOST,
+            'user': settings.DB_USER,
+            'password': settings.DB_PASSWORD,
+            'database': settings.DB_NAME
         }
         self.servicio_almacenamiento = ServicioAlmacenamiento(
             db_config=db_config)
