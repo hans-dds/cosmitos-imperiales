@@ -1,88 +1,95 @@
-from presentacion.vista.charts import mostrar_graficos
-import streamlit as st
-from presentacion.controlador.loader import get_services, process_uploaded_file
-from presentacion.vista.layout import show_header, show_tables, show_comments_table, show_export_button
-import presentacion.vista.config_app_ui as cau
-from presentacion.vista.layout import upload_file_view
-from presentacion.vista.utils import color_discrete_map
 import pandas as pd
+import streamlit as st
+
+from infrastructure.dependency_injection_container import container
+from infrastructure.ui.charts import show_charts
+from infrastructure.ui.config import config_page
+from infrastructure.ui.export import generate_excel_export
+from infrastructure.ui.sidebar import show_sidebar
+from infrastructure.ui.tables import show_comments_table
 
 
-cau.config_page()
-show_header()
+def main():
+    """The main function that runs the Streamlit application."""
+    config_page()
+    st.title("Gestor de Satisfacción y Seguimiento de Posventa")
 
-# Get services
-sld, sae = get_services()
+    # Get services from the container
+    process_use_case = container.process_file_use_case
+    list_analyses_use_case = container.list_analyses_use_case
+    load_analysis_use_case = container.load_analysis_use_case
 
-# --- Sidebar ---
-st.sidebar.title("Análisis Guardados")
-lista_analisis = sae.listar_analisis_guardados()
+    # Render sidebar and get user input
+    uploaded_file, analysis_to_load = show_sidebar(list_analyses_use_case)
 
-if not lista_analisis:
-    st.sidebar.info("No hay análisis guardados.")
-else:
-    analisis_seleccionado = st.sidebar.selectbox(
-        "Seleccionar un análisis para ver", lista_analisis
-    )
-    if st.sidebar.button("Cargar Análisis"):
-        df_cargado = sae.cargar_analisis_por_nombre(analisis_seleccionado)
-        if df_cargado is not None and not df_cargado.empty:
-            st.session_state['df_actual'] = df_cargado
-            st.session_state['analisis_actual'] = analisis_seleccionado
+    # --- Main Content Area ---
+
+    # Logic for loading a saved analysis
+    if analysis_to_load:
+        st.session_state.df_display = load_analysis_use_case.execute(
+            analysis_to_load)
+        st.session_state.analysis_name = analysis_to_load
+
+    # Logic for processing a new file
+    if uploaded_file:
+        file_basename = uploaded_file.name.split('.')[0]
+        try:
+            # Read file into DataFrame
+            if uploaded_file.type == "text/csv":
+                raw_df = pd.read_csv(uploaded_file)
+            else:
+                # This logic was in the old `ServicioLimpiarDatos`
+                raw_df_dict = pd.read_excel(uploaded_file, sheet_name=None)
+                required_sheets = ["ATC", "Encuesta salida"]
+                df_list = [
+                    df_sheet for sheet_name, df_sheet in raw_df_dict.items()
+                    if sheet_name in required_sheets
+                ]
+                raw_df = pd.concat(df_list, ignore_index=True)
+
+            with st.spinner(
+                    "Procesando archivo... Esto puede tardar unos segundos."):
+                analyzed_df = process_use_case.execute(raw_df, file_basename)
+
+            st.success(
+                f"Archivo '{uploaded_file.name}'"
+                " procesado y guardado exitosamente.")
+            st.session_state.df_display = analyzed_df
+            st.session_state.analysis_name = f"Nuevo Análisis: {file_basename}"
+
+        except Exception as e:
+            st.error(f"Ocurrió un error al procesar el archivo: {e}")
+
+    # Display the current DataFrame (either newly processed or loaded)
+    if 'df_display' in st.session_state:
+        st.header(st.session_state.analysis_name)
+        df_to_show = st.session_state.df_display
+
+        if not df_to_show.empty:
+            if 'comentarios' in df_to_show.columns and 'longitud' \
+                    not in df_to_show.columns:
+                df_to_show['longitud'] = df_to_show['comentarios'].str.len()
+
+            color_map = {
+                'Positivo': '#00CC96',
+                'Negativo': '#EF553B',
+                'Neutro': '#636EFA'
+                }
+            show_charts(df_to_show, color_map)
+            show_comments_table(df_to_show)
+
+            st.download_button(
+                label="📎 Descargar Reporte en Excel",
+                data=generate_excel_export(df_to_show),
+                file_name="reporte_"
+                + f"{st.session_state.analysis_name.replace(' ', '_')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            )
         else:
-            st.sidebar.error("No se pudieron cargar los datos del análisis.")
-
-# Display loaded analysis from sidebar
-if 'df_actual' in st.session_state:
-    st.subheader(f"Mostrando análisis: {st.session_state['analisis_actual']}")
-    df_display = st.session_state['df_actual']
-    if 'comentarios' in df_display.columns:
-        df_display['longitud'] = df_display['comentarios'].str.len()
-    else:
-        df_display['longitud'] = 0
-    show_comments_table(df_display)
-    mostrar_graficos(df_display, color_discrete_map)
-    show_export_button(df_display)
+            st.warning(
+                "No hay datos para mostrar en el análisis seleccionado.")
 
 
-#st.markdown("---")
-
-# File uploader
-archivo = upload_file_view()
-if archivo:
-    datos, mensaje, valido = process_uploaded_file(archivo, sld, sae)
-
-    if valido:
-        st.sidebar.success(mensaje)
-        #st.subheader("Resultados del Nuevo Análisis")
-        df = datos
-        if df is not None and not df.empty:
-            #st.dataframe(df.head(5), use_container_width=True, hide_index=True)
-            show_comments_table(df)
-            mostrar_graficos(df, color_discrete_map)
-            show_export_button(df)
-
-            if st.button("Guardar Resultados"):
-                file_name_base = archivo.name.split('.')[0]
-                table_name = f"analisis_{file_name_base}"
-                guardado_exitoso, mensaje_guardado = sae.guardar_analisis(
-                    df, file_name_base, table_name
-                )
-                if guardado_exitoso:
-                    st.success("Resultados guardados exitosamente.")
-                    st.info(mensaje_guardado)
-                    # Refresh saved analyses list
-                    st.rerun()
-                else:
-                    st.error("Error al guardar los resultados.")
-                    st.warning(mensaje_guardado)
-
-
-
-        elif df is not None and df.empty:
-            st.warning("El archivo se procesó, pero no se encontraron "
-                       "comentarios válidos después de la limpieza.")
-        else:
-            st.warning("No se pudieron cargar los datos correctamente.")
-    else:
-        st.sidebar.error(mensaje)
+if __name__ == "__main__":
+    main()
