@@ -7,7 +7,8 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 class ProcessFileUseCase:
     """
-    This use case orchestrates the cleaning, analysis, and storage of review data from a file.
+    This use case orchestrates the cleaning, analysis, and storage of review
+    data from a file.
     """
 
     def __init__(
@@ -20,13 +21,17 @@ class ProcessFileUseCase:
         self._sentiment_analyzer = sentiment_analyzer
         self._analysis_repository = analysis_repository
 
-    def execute(self, raw_data: pd.DataFrame, file_basename: str) -> pd.DataFrame:
+    def execute(
+            self,
+            raw_data: pd.DataFrame,
+            file_basename: str) -> pd.DataFrame:
         """
         Executes the use case.
 
         Args:
             raw_data: The raw DataFrame read from the uploaded file.
-            file_basename: The base name of the original file (e.g., 'c_Abril_2025').
+            file_basename: The base name of the original file
+            (e.g., 'c_Abril_2025').
 
         Returns:
             The DataFrame containing the analyzed data.

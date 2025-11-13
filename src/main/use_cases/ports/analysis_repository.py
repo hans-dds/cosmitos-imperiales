@@ -5,7 +5,8 @@ from typing import List, Tuple
 
 class IAnalysisRepository(ABC):
     """
-    Port (Interface) for a repository that handles persistence of analysis results.
+    Port (Interface) for a repository that handles
+    persistence of analysis results.
     """
 
     @abstractmethod
@@ -23,7 +24,9 @@ class IAnalysisRepository(ABC):
         pass
 
     @abstractmethod
-    def save_mysql(self, data: pd.DataFrame, table_name: str) -> Tuple[bool, str]:
+    def save_mysql(self,
+                   data: pd.DataFrame,
+                   table_name: str) -> Tuple[bool, str]:
         """
         Saves the analysis data to a MySQL table.
 
