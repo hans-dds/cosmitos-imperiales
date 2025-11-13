@@ -20,3 +20,9 @@ dist/
 
 # Archivos de contexto para LLM
 LLM/*
+
+# Archivos de entrorno
+.env
+
+# Nuevos analisis guardados
+datos_analizados/
