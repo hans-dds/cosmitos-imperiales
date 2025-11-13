@@ -1,3 +1,4 @@
+from config import settings
 import pandas as pd
 import joblib
 import os
@@ -26,14 +27,14 @@ class ServicioAnalisisEvaluacion:
             traceback.print_exc()
             self.modelo = None
 
-        # TODO: Externalize database configuration
         db_config = {
-            'host': 'localhost',
-            'user': 'user',
-            'password': 'password',
-            'database': 'cosmitos_imperiales_db'
+            'host': settings.DB_HOST,
+            'user': settings.DB_USER,
+            'password': settings.DB_PASSWORD,
+            'database': settings.DB_NAME
         }
-        self.servicio_almacenamiento = ServicioAlmacenamiento(db_config=db_config)
+        self.servicio_almacenamiento = ServicioAlmacenamiento(
+            db_config=db_config)
 
     def realizar_analisis_sentimientos(self, datos: pd.DataFrame) -> pd.DataFrame:
         """
