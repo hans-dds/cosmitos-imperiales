@@ -1,4 +1,4 @@
-from src.main.config import settings
+from config import settings
 import pandas as pd
 import joblib
 import os
