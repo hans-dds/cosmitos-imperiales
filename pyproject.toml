@@ -11,9 +11,9 @@ dependencies = [
     "openpyxl==3.1.5",
     "scikit-learn==1.7.1",
     "plotly==6.3.1",
-    "mysql-connector-python==8.0.33",
-    "pytest==7.4.0",
-    "pytest-cov==4.1.0",
+    "mysql-connector-python==9.5.0",
+    "pytest==9.0.1",
+    "pytest-cov==7.0.0",
     "pdfkit",
     "xlsxwriter"
 ]
