@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 # Construir la ruta al archivo .env en la raíz del proyecto
 dotenv_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 
@@ -26,9 +27,9 @@ class Settings:
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
     DB_NAME: str = os.getenv("DB_NAME", "database")
     logger.info("Configuración cargada: "
-                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER}, "
-                 f"DB_NAME={DB_NAME}, "
-                 f"DB_PASSWORD={DB_PASSWORD}")
+                f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
+                f"DB_NAME={DB_NAME}, "
+                f"DB_PASSWORD={DB_PASSWORD}")
 
 
 settings = Settings()
