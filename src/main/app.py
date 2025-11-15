@@ -5,6 +5,7 @@ from presentacion.vista.layout import show_header, show_tables, show_comments_ta
 import presentacion.vista.config_app_ui as cau
 from presentacion.vista.layout import upload_file_view
 from presentacion.vista.utils import color_discrete_map
+from presentacion.vista.word_cloud import show_word_cloud
 import pandas as pd
 
 
@@ -41,6 +42,7 @@ if 'df_actual' in st.session_state:
     else:
         df_display['longitud'] = 0
     show_comments_table(df_display)
+    show_word_cloud(df_display)
     mostrar_graficos(df_display, color_discrete_map)
     show_export_button(df_display)
 
@@ -59,6 +61,7 @@ if archivo:
         if df is not None and not df.empty:
             #st.dataframe(df.head(5), use_container_width=True, hide_index=True)
             show_comments_table(df)
+            show_word_cloud(df)
             mostrar_graficos(df, color_discrete_map)
             show_export_button(df)
 
