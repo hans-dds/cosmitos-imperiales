@@ -8,6 +8,8 @@ from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from domain.entities.suggestion import Suggestion
+from use_cases.generate_suggestions_use_case import GenerateSuggestionsUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 
 
@@ -174,4 +176,24 @@ class StreamlitController:
             return True, combined_df, None
         except Exception as e:
             return False, None, f"Error al consolidar los análisis: {str(e)}"
+
+
+    def handle_get_suggestions(
+        self,
+        analysis_name: str
+    ) -> Tuple[bool, Optional[List[Suggestion]], Optional[str]]:
+        """
+        Maneja la generación de sugerencias para un análisis.
+
+        Args:
+            analysis_name: El nombre del análisis a procesar.
+
+        Returns:
+            Tupla con (éxito, lista_de_sugerencias, mensaje_de_error)
+        """
+        try:
+            suggestions = self._generate_suggestions_use_case.execute(analysis_name)
+            return True, suggestions, None
+        except Exception as e:
+            return False, None, f"Error al generar sugerencias: {str(e)}"
 
