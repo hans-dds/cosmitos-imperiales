@@ -16,7 +16,11 @@ dependencies = [
     "pytest-cov==7.0.0",
     "pdfkit",
     "xlsxwriter",
-    "python-dotenv==1.2.1"
+    "python-dotenv==1.2.1",
+    "wordcloud==1.9.4",
+    "nltk==3.9.2",
+    "kaleido==0.2.1",
+    "fpdf2==2.7.9"
 ]
 
 [project.optional-dependencies]

@@ -56,15 +56,22 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         comentarios TEXT,
                         calificacion FLOAT,
-                        Clasificacion VARCHAR(255)
+                        Clasificacion VARCHAR(255),
+                        Fiabilidad VARCHAR(255)
                     )""")
 
                     for _, row in data.iterrows():
+                        # Asegurar que Fiabilidad existe en el row
+                        fiabilidad = row.get('Fiabilidad', 'N/A')
+                        # Convertir a string si es numérico
+                        if isinstance(fiabilidad, (int, float)):
+                            fiabilidad = str(fiabilidad)
+                        
                         sql = (f"INSERT INTO `{table_name}` "
-                               f"(comentarios, calificacion, Clasificacion) "
-                               "VALUES (%s, %s, %s)")
+                               f"(comentarios, calificacion, Clasificacion, Fiabilidad) "
+                               "VALUES (%s, %s, %s, %s)")
                         val = (row['comentarios'], row['calificacion'],
-                               row['Clasificacion'])
+                               row['Clasificacion'], fiabilidad)
                         cursor.execute(sql, val)
                     conn.commit()
             msg = f"Datos guardados exitosamente en la tabla MySQL '{table_name}'."
@@ -87,6 +94,7 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         """
         Carga un análisis específico de una tabla de MySQL.
         Convierte valores numéricos de clasificación a texto si es necesario.
+        Agrega columna de Fiabilidad si no existe.
         """
         try:
             with mysql.connector.connect(**self._db_config) as conn:
@@ -95,13 +103,23 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                 if not all(c.isalnum() or c == '_' for c in name):
                     raise ValueError(f"Nombre de tabla inválido: {name}")
                 
-                query = f"SELECT comentarios, calificacion, Clasificacion FROM `{name}`"
-                df = pd.read_sql(query, conn)
+                # Intentar cargar con Fiabilidad si existe
+                query = f"SELECT comentarios, calificacion, Clasificacion, Fiabilidad FROM `{name}`"
+                try:
+                    df = pd.read_sql(query, conn)
+                except Exception:
+                    # Si Fiabilidad no existe en la tabla, cargar sin ella
+                    query = f"SELECT comentarios, calificacion, Clasificacion FROM `{name}`"
+                    df = pd.read_sql(query, conn)
                 
                 # Usar el mapper del dominio para convertir clasificaciones
                 if not df.empty and 'Clasificacion' in df.columns:
                     from domain.mappers.sentiment_mapper import convert_dataframe_classifications
                     df = convert_dataframe_classifications(df)
+                
+                # Agregar Fiabilidad si no existe
+                if 'Fiabilidad' not in df.columns:
+                    df['Fiabilidad'] = 'N/A'
                 
                 return df
         except Error as e:

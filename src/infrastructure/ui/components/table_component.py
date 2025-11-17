@@ -8,6 +8,7 @@ class TableComponent:
     """Componente responsable de renderizar la tabla de comentarios."""
 
     REQUIRED_COLUMNS = ['calificacion', 'comentarios', 'Clasificacion']
+    DISPLAY_COLUMNS = ['calificacion', 'comentarios', 'Clasificacion', 'Fiabilidad']
 
     def render(self, df: pd.DataFrame):
         """
@@ -21,8 +22,12 @@ class TableComponent:
 
         st.subheader("Comentarios Filtrados")
 
-        # Crear copia con solo las columnas necesarias
-        display_df = df[self.REQUIRED_COLUMNS].copy()
+        # Crear copia con las columnas a mostrar (incluyendo Fiabilidad si existe)
+        columns_to_display = [
+            col for col in self.DISPLAY_COLUMNS 
+            if col in df.columns
+        ]
+        display_df = df[columns_to_display].copy()
 
         # Aplicar filtros
         display_df = self._apply_filters(display_df)
@@ -51,6 +56,10 @@ class TableComponent:
                 f"Faltan las columnas: {', '.join(missing_columns)}"
             )
             return False
+        
+        # Si no existe Fiabilidad, agregarla con valor por defecto
+        if 'Fiabilidad' not in df.columns:
+            df['Fiabilidad'] = 'N/A'
 
         return True
 
@@ -91,9 +100,20 @@ class TableComponent:
             value=min(10, max_comments)
         )
 
+        # Preparar nombres de columnas para mostrar
+        column_mapping = {
+            'calificacion': 'Calificación',
+            'comentarios': 'Comentario',
+            'Clasificacion': 'Clasificación',
+            'Fiabilidad': 'Fiabilidad'
+        }
+        
+        # Renombrar columnas para mostrar
+        display_df_renamed = df.rename(columns=column_mapping)
+        
         # Mostrar tabla
         st.dataframe(
-            df.head(number_of_comments),
+            display_df_renamed.head(number_of_comments),
             use_container_width=True,
             hide_index=True
         )

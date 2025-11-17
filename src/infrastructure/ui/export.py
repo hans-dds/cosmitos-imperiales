@@ -38,7 +38,11 @@ def generate_excel_export(
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         # Escribir hojas
         # Filtrar solo las columnas requeridas para la hoja de datos
-        columns_to_export = ['calificacion', 'comentarios', 'Clasificacion']
+        columns_to_export = ['calificacion', 'comentarios', 'Clasificacion', 'Fiabilidad']
+        # Asegurar que Fiabilidad existe, si no agregarla con 'N/A'
+        if 'Fiabilidad' not in df.columns:
+            df = df.copy()
+            df['Fiabilidad'] = 'N/A'
         df_export = df[[col for col in columns_to_export if col in df.columns]].copy()
         
         df_export.to_excel(writer, index=False, sheet_name='Datos')

@@ -1,7 +1,12 @@
 import joblib
 import pandas as pd
+import numpy as np
 
 from domain.value_objects.sentiment import Sentiment
+from domain.services.reliability_calculator import (
+    calculate_reliability_from_probability,
+    calculate_reliability_from_rating
+)
 from use_cases.ports.sentiment_analyzer import ISentimentAnalyzer
 
 
@@ -59,4 +64,42 @@ class JoblibSentimentAnalyzer(ISentimentAnalyzer):
             for pred in numeric_predictions
         ]
 
+        # Calcular fiabilidad
+        analyzed_df = self._add_reliability(analyzed_df, X_to_predict)
+
         return analyzed_df
+    
+    def _add_reliability(self, df: pd.DataFrame, X_to_predict: pd.DataFrame) -> pd.DataFrame:
+        """
+        Agrega la columna de fiabilidad al DataFrame.
+        
+        Si el modelo tiene predict_proba, usa las probabilidades máximas.
+        Si no, usa la calificación como fallback.
+        
+        Args:
+            df: DataFrame con las predicciones
+            X_to_predict: Datos usados para la predicción
+            
+        Returns:
+            DataFrame con la columna 'Fiabilidad' agregada
+        """
+        if hasattr(self._model, 'predict_proba'):
+            try:
+                # Obtener probabilidades de todas las clases
+                probabilities = self._model.predict_proba(X_to_predict)
+                # Obtener la probabilidad máxima para cada predicción
+                max_probabilities = probabilities.max(axis=1)
+                # Convertir a fiabilidad numérica
+                df['Fiabilidad'] = [
+                    calculate_reliability_from_probability(float(prob))
+                    for prob in max_probabilities
+                ]
+            except Exception as e:
+                print(f"Advertencia: No se pudieron obtener probabilidades del modelo: {e}")
+                # Fallback a calificación
+                df['Fiabilidad'] = df['calificacion'].apply(calculate_reliability_from_rating)
+        else:
+            # Usar calificación como fallback
+            df['Fiabilidad'] = df['calificacion'].apply(calculate_reliability_from_rating)
+        
+        return df
