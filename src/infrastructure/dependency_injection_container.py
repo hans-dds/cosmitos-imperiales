@@ -2,11 +2,14 @@ from adapters.data_cleaner_adapter import PandasDataCleaner
 from adapters.repositories.analysis_repository_adapter import \
     SQLandCSVAnalysisRepository
 from adapters.sentiment_analyzer_adapter import JoblibSentimentAnalyzer
+from adapters.file_readers.file_reader_adapter import PandasFileReader
 from infrastructure.config import settings
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.process_file_use_case import ProcessFileUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
+from use_cases.read_file_use_case import ReadFileUseCase
+from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
 import os
 # Configure logging
@@ -51,6 +54,9 @@ class Container:
         # 3. Adaptador de Limpiador de Datos
         self._data_cleaner = PandasDataCleaner()
 
+        # 4. Adaptador de Lector de Archivos
+        self._file_reader = PandasFileReader(required_sheets=["ATC", "Encuesta salida"])
+
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
         """
@@ -86,6 +92,27 @@ class Container:
         """
         return DeleteAnalysisUseCase(
             analysis_repository=self._analysis_repository)
+
+    @property
+    def read_file_use_case(self) -> ReadFileUseCase:
+        """
+        Crea y devuelve una instancia de ReadFileUseCase.
+        """
+        return ReadFileUseCase(file_reader=self._file_reader)
+
+    @property
+    def streamlit_controller(self) -> StreamlitController:
+        """
+        Crea y devuelve una instancia de StreamlitController con todas las
+        dependencias inyectadas.
+        """
+        return StreamlitController(
+            read_file_use_case=self.read_file_use_case,
+            process_file_use_case=self.process_file_use_case,
+            load_analysis_use_case=self.load_analysis_use_case,
+            list_analyses_use_case=self.list_analyses_use_case,
+            delete_analysis_use_case=self.delete_analysis_use_case,
+        )
 
 
 # Una instancia global del contenedor que la aplicación puede usar
