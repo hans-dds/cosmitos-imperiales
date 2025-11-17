@@ -89,6 +89,10 @@ def process_uploaded_file(archivo, sld: SLD, sae: SAE):
             df_clasificado['longitud'] = df_clasificado['comentarios'].str.len()
         else:
             df_clasificado['longitud'] = 0
+        
+        if 'Fiabilidad' not in df_clasificado.columns:
+            # Agregar columna por defecto si no existe
+            df_clasificado['Fiabilidad'] = 'N/A'
 
         return df_clasificado, mensaje_exito, True
 
