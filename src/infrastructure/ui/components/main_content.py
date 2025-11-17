@@ -160,7 +160,7 @@ class MainContent:
         
         # Renderizar el nuevo componente
         self._suggestions.render(suggestions_list)
-        st.divider() # Separador visual
+        st.divider() 
 
         # Renderizar componentes
         self._charts.render(df_filtered, color_map)
