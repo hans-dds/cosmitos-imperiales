@@ -9,6 +9,7 @@ from infrastructure.ui.components.analysis_state_manager import AnalysisStateMan
 from infrastructure.ui.components.charts_component import ChartsComponent
 from infrastructure.ui.components.table_component import TableComponent
 from infrastructure.ui.components.export_component import ExportComponent
+from infrastructure.ui.components.word_cloud_component import WordCloudComponent
 
 
 class MainContent:
@@ -28,6 +29,7 @@ class MainContent:
         self._charts = ChartsComponent()
         self._table = TableComponent()
         self._export = ExportComponent()
+        self._word_cloud = WordCloudComponent()
 
     def render(
         self,
@@ -139,6 +141,7 @@ class MainContent:
 
         # Renderizar componentes
         self._charts.render(df_prepared, color_map)
+        self._word_cloud.render(df_prepared)
         self._table.render(df_prepared)
         self._export.render(df_prepared, analysis_name)
 
