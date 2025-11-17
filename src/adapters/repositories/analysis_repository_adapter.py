@@ -45,9 +45,14 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
+                    # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
+                    if not all(c.isalnum() or c == '_' for c in table_name):
+                        raise ValueError(f"Nombre de tabla inválido: {table_name}")
+                    
                     # Esta es una creación de esquema simplificada
+                    # Usar backticks para escapar el nombre de la tabla
                     cursor.execute(f"""
-                    CREATE TABLE IF NOT EXISTS {table_name} (
+                    CREATE TABLE IF NOT EXISTS `{table_name}` (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         comentarios TEXT,
                         calificacion FLOAT,
@@ -55,7 +60,7 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                     )""")
 
                     for _, row in data.iterrows():
-                        sql = (f"INSERT INTO {table_name} "
+                        sql = (f"INSERT INTO `{table_name}` "
                                f"(comentarios, calificacion, Clasificacion) "
                                "VALUES (%s, %s, %s)")
                         val = (row['comentarios'], row['calificacion'],
@@ -85,34 +90,18 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         """
         try:
             with mysql.connector.connect(**self._db_config) as conn:
-                query = (f"SELECT comentarios, calificacion, Clasificacion "
-                         f"FROM {name}")
+                # Usar parámetros preparados para mayor seguridad
+                # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
+                if not all(c.isalnum() or c == '_' for c in name):
+                    raise ValueError(f"Nombre de tabla inválido: {name}")
+                
+                query = f"SELECT comentarios, calificacion, Clasificacion FROM `{name}`"
                 df = pd.read_sql(query, conn)
                 
-                # Si la clasificación está en formato numérico, convertir a texto
+                # Usar el mapper del dominio para convertir clasificaciones
                 if not df.empty and 'Clasificacion' in df.columns:
-                    from domain.value_objects.sentiment import Sentiment
-                    
-                    # Intentar convertir valores numéricos a texto
-                    def convert_classification(value):
-                        try:
-                            # Si es numérico, convertir
-                            if pd.notna(value):
-                                numeric_val = int(float(value))
-                                return Sentiment.from_numeric(numeric_val).value
-                            return value
-                        except (ValueError, TypeError):
-                            # Si ya es texto o no se puede convertir, retornar tal cual
-                            return value
-                    
-                    # Solo convertir si los valores son numéricos
-                    if df['Clasificacion'].dtype in ['int64', 'float64']:
-                        df['Clasificacion'] = df['Clasificacion'].apply(convert_classification)
-                    elif df['Clasificacion'].dtype == 'object':
-                        # Verificar si hay valores numéricos mezclados con texto
-                        numeric_mask = pd.to_numeric(df['Clasificacion'], errors='coerce').notna()
-                        if numeric_mask.any():
-                            df.loc[numeric_mask, 'Clasificacion'] = df.loc[numeric_mask, 'Clasificacion'].apply(convert_classification)
+                    from domain.mappers.sentiment_mapper import convert_dataframe_classifications
+                    df = convert_dataframe_classifications(df)
                 
                 return df
         except Error as e:
@@ -134,13 +123,17 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             # Eliminar tabla de MySQL
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
+                    # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
+                    if not all(c.isalnum() or c == '_' for c in name):
+                        return False, f"Nombre de tabla inválido: {name}"
+                    
                     # Verificar que la tabla existe antes de intentar eliminarla
                     cursor.execute(f"SHOW TABLES LIKE '{name}'")
                     if not cursor.fetchone():
                         return False, f"El análisis '{name}' no existe en la base de datos."
                     
-                    # Eliminar la tabla
-                    cursor.execute(f"DROP TABLE IF EXISTS {name}")
+                    # Eliminar la tabla usando backticks para escapar
+                    cursor.execute(f"DROP TABLE IF EXISTS `{name}`")
                     conn.commit()
             
             # Intentar eliminar el archivo CSV asociado si existe

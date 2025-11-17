@@ -9,6 +9,7 @@ from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.process_file_use_case import ProcessFileUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.read_file_use_case import ReadFileUseCase
+from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
 import os
@@ -41,7 +42,8 @@ class Container:
                     f"{db_config}")
 
         self._analysis_repository = SQLandCSVAnalysisRepository(
-            db_config=db_config)
+            db_config=db_config,
+            csv_base_dir=settings.CSV_BASE_DIR)
 
         # 2. Adaptador de Analizador de Sentimiento
         # Construir la ruta al modelo de manera robusta usando __file__
@@ -55,7 +57,7 @@ class Container:
         self._data_cleaner = PandasDataCleaner()
 
         # 4. Adaptador de Lector de Archivos
-        self._file_reader = PandasFileReader(required_sheets=["ATC", "Encuesta salida"])
+        self._file_reader = PandasFileReader(required_sheets=settings.EXCEL_REQUIRED_SHEETS)
 
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
@@ -101,6 +103,13 @@ class Container:
         return ReadFileUseCase(file_reader=self._file_reader)
 
     @property
+    def prepare_analysis_display_use_case(self) -> PrepareAnalysisDisplayUseCase:
+        """
+        Crea y devuelve una instancia de PrepareAnalysisDisplayUseCase.
+        """
+        return PrepareAnalysisDisplayUseCase()
+
+    @property
     def streamlit_controller(self) -> StreamlitController:
         """
         Crea y devuelve una instancia de StreamlitController con todas las
@@ -112,6 +121,7 @@ class Container:
             load_analysis_use_case=self.load_analysis_use_case,
             list_analyses_use_case=self.list_analyses_use_case,
             delete_analysis_use_case=self.delete_analysis_use_case,
+            prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
         )
 
 

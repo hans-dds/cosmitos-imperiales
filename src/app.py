@@ -26,18 +26,14 @@ def main():
     """
     # Configurar página
     config_page()
-    st.title("Gestor de Satisfacción y Seguimiento de Posventa")
+    from infrastructure.config import settings
+    st.title(settings.APP_TITLE)
 
     # Obtener dependencias del contenedor
     controller = container.streamlit_controller
-    list_analyses_use_case = container.list_analyses_use_case
-    delete_analysis_use_case = container.delete_analysis_use_case
 
     # Renderizar barra lateral y obtener entrada del usuario
-    uploaded_file, analysis_to_load = show_sidebar(
-        list_analyses_use_case,
-        delete_analysis_use_case
-    )
+    uploaded_file, analysis_to_load = show_sidebar(controller)
 
     # Renderizar contenido principal
     main_content = MainContent(controller)

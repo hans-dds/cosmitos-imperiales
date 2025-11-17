@@ -1,43 +1,21 @@
+"""
+Módulo de exportación a Excel.
+
+Este módulo se encarga únicamente del formateo y generación del archivo Excel,
+delegando el cálculo de métricas al caso de uso correspondiente.
+"""
+
 import io
 import pandas as pd
+from use_cases.generate_summary_use_case import GenerateSummaryUseCase
 
 
-def _generate_summary(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Genera un DataFrame de resumen agrupado por clasificación.
-    
-    Args:
-        df: DataFrame con las columnas 'Clasificacion', 'comentarios' y opcionalmente 'longitud'
-        
-    Returns:
-        DataFrame con el resumen por clasificación
-    """
-    # Asegurar que existe la columna 'longitud' para el cálculo
-    if 'longitud' not in df.columns and 'comentarios' in df.columns:
-        df = df.copy()
-        df['longitud'] = df['comentarios'].str.len()
-    
-    # Crear el resumen con las columnas necesarias en el orden correcto
-    # Orden: Clasificacion, NumComentarios, LongitudPromedio, Porcentaje
-    summary = df.groupby('Clasificacion').agg(
-        NumComentarios=('comentarios', 'count'),
-        LongitudPromedio=('longitud', 'mean') if 'longitud' in df.columns else ('comentarios', lambda x: x.str.len().mean()),
-        Porcentaje=('comentarios', lambda x: (len(x) / len(df)) * 100)
-    ).reset_index()
-    
-    # Asegurar el orden correcto de las columnas
-    summary = summary[['Clasificacion', 'NumComentarios', 'LongitudPromedio', 'Porcentaje']]
-    
-    # Redondear valores numéricos
-    if 'LongitudPromedio' in summary.columns:
-        summary['LongitudPromedio'] = summary['LongitudPromedio'].round(2)
-    if 'Porcentaje' in summary.columns:
-        summary['Porcentaje'] = summary['Porcentaje'].round(2)
-    
-    return summary
-
-
-def generate_excel_export(df: pd.DataFrame, resumen: pd.DataFrame = None, distribucion=None):
+def generate_excel_export(
+    df: pd.DataFrame, 
+    resumen: pd.DataFrame = None, 
+    distribucion=None,
+    generate_summary_use_case: GenerateSummaryUseCase = None
+):
     """
     Genera un archivo Excel a partir del DataFrame con formato mejorado y gráficas.
     
@@ -53,7 +31,9 @@ def generate_excel_export(df: pd.DataFrame, resumen: pd.DataFrame = None, distri
     
     # Generar resumen si no se proporciona
     if resumen is None:
-        resumen = _generate_summary(df)
+        if generate_summary_use_case is None:
+            generate_summary_use_case = GenerateSummaryUseCase()
+        resumen = generate_summary_use_case.execute(df)
     
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         # Escribir hojas

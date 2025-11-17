@@ -2,6 +2,7 @@ import pandas as pd
 
 from use_cases.ports.data_cleaner import IDataCleaner
 from domain.services.text_cleaner import clean_text
+from domain.services.comment_filter import filter_irrelevant_comments
 
 
 class PandasDataCleaner(IDataCleaner):
@@ -30,31 +31,8 @@ class PandasDataCleaner(IDataCleaner):
         df['comentarios'] = df['comentarios'].apply(clean_text)
         df.dropna(subset=['comentarios'], inplace=True)
 
-        # Filtrar comentarios irrelevantes
-        df = self._filter_irrelevant_comments(df)
+        # Filtrar comentarios irrelevantes usando el servicio de dominio
+        df = filter_irrelevant_comments(df)
 
         print(f"Limpieza completada. {len(df)} comentarios válidos restantes.")
         return df
-
-    def _filter_irrelevant_comments(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Filtra los comentarios que no proporcionan retroalimentación significativa.
-        """
-        irrelevant_patterns = [
-            r'^solo califica',
-            r'^no (?:brinda|proporciona|quiso|tiene|contesta)',
-            r'^sin comentarios?$',
-            r'^ningun[ao]s?$',
-            r'^\d+cm$',
-            r'^se envia whatsapp$',
-            r'^(?:bdc|ok|na|s c)$'
-        ]
-
-        regex_filter = '|'.join(irrelevant_patterns)
-        irrelevant_mask = df['comentarios'].str.contains(
-            regex_filter,
-            regex=True,
-            na=False)
-        short_mask = df['comentarios'].str.len() < 5
-
-        return df[~(irrelevant_mask | short_mask)]

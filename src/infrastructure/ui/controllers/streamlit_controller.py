@@ -1,12 +1,13 @@
 import pandas as pd
 import streamlit as st
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict
 
 from use_cases.process_file_use_case import ProcessFileUseCase
 from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
+from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
 
 
 class StreamlitController:
@@ -22,12 +23,14 @@ class StreamlitController:
         load_analysis_use_case: LoadAnalysisUseCase,
         list_analyses_use_case: ListAnalysesUseCase,
         delete_analysis_use_case: DeleteAnalysisUseCase,
+        prepare_analysis_display_use_case: PrepareAnalysisDisplayUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
         self._load_analysis_use_case = load_analysis_use_case
         self._list_analyses_use_case = list_analyses_use_case
         self._delete_analysis_use_case = delete_analysis_use_case
+        self._prepare_analysis_display_use_case = prepare_analysis_display_use_case
 
     def handle_file_upload(
         self,
@@ -123,4 +126,19 @@ class StreamlitController:
             Tupla con (éxito general, lista de resultados individuales)
         """
         return self._delete_analysis_use_case.execute_multiple(analysis_names)
+    
+    def prepare_analysis_display(
+        self,
+        df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        """
+        Prepara un DataFrame para visualización.
+        
+        Args:
+            df: DataFrame con los datos del análisis
+            
+        Returns:
+            Tupla con (DataFrame preparado, mapa de colores)
+        """
+        return self._prepare_analysis_display_use_case.execute(df)
 

@@ -134,19 +134,11 @@ class MainContent:
         # Mostrar encabezado
         st.header(analysis_name)
 
-        # Preparar DataFrame para visualización
-        if 'comentarios' in df_to_show.columns and 'longitud' not in df_to_show.columns:
-            df_to_show['longitud'] = df_to_show['comentarios'].str.len()
-
-        # Definir mapa de colores
-        color_map = {
-            'Promotor': '#00CC96',
-            'Detractor': '#EF553B',
-            'Neutro': '#636EFA'
-        }
+        # Preparar DataFrame para visualización usando el caso de uso
+        df_prepared, color_map = self._controller.prepare_analysis_display(df_to_show)
 
         # Renderizar componentes
-        self._charts.render(df_to_show, color_map)
-        self._table.render(df_to_show)
-        self._export.render(df_to_show, analysis_name)
+        self._charts.render(df_prepared, color_map)
+        self._table.render(df_prepared)
+        self._export.render(df_prepared, analysis_name)
 
