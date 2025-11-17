@@ -38,6 +38,9 @@ class Settings:
     
     # Configuración de UI
     APP_TITLE: str = os.getenv("APP_TITLE", "Gestor de Satisfacción y Seguimiento de Posventa")
+
+    LLM_API_KEY="tu_api_key_secreta_aqui"
+    LLM_API_URL="httpsE://api.openai.com/v1/chat/completions"
     
     logger.info("Configuración cargada: "
                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
