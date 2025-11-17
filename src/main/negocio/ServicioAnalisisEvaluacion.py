@@ -63,6 +63,13 @@ class ServicioAnalisisEvaluacion:
         predicciones = self.modelo.predict(X_para_predecir)
 
         datos_a_predecir['Clasificacion'] = predicciones
+        if hasattr(self.modelo, 'predict_proba'):
+            probabilidades = self.modelo.predict_proba(X_para_predecir)
+            datos_a_predecir['Fiabilidad'] = probabilidades.max(axis=1)
+        else:
+            datos_a_predecir['Fiabilidad'] = datos_a_predecir['calificacion'].apply(
+            lambda x: 'Alta' if x <= 2 or x >= 9 else 'Media' if x <= 4 or x >= 7 else 'Baja'
+            )
 
         print("Predicciones completadas.")
         return datos_a_predecir
