@@ -1,6 +1,8 @@
 import pandas as pd
 import streamlit as st
 from presentacion.logica.exportador_excel import generar_excel
+from presentacion.logica.exportador_pdf import generar_pdf
+from presentacion.vista.utils import color_discrete_map
 
 def show_header():
     st.title("Gestor de Satisfacción y Seguimiento de Posventa")
@@ -27,12 +29,12 @@ def show_tables(df):
 
         st.dataframe(
             top10[['calificacion', 'comentarios']],
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
 
     #Agregaciones
-    resumen = df.groupby('Clasificacion').agg({
+    resumen = df.groupby('Clasificacion', observed=False).agg({
         'comentarios': 'count',
         'longitud': 'mean'
     }).reset_index().rename(columns={'comentarios': 'NumComentarios', 'longitud': 'LongitudPromedio'})
@@ -100,7 +102,7 @@ def show_comments_table(df):
 
     st.dataframe(
         df_mostrar[['calificacion', 'comentarios', 'Clasificacion']].rename(columns={'calificacion': 'Calificación', 'comentarios': 'Comentario', 'Clasificacion': 'Clasificación'}),
-        use_container_width=True,
+        width='stretch',
         hide_index=True
     )
 
@@ -118,7 +120,7 @@ def show_export_button(df):
         return
 
     # Agregaciones
-    resumen = df.groupby('Clasificacion').agg({
+    resumen = df.groupby('Clasificacion', observed=False).agg({
         'comentarios': 'count',
         'longitud': 'mean'
     }).reset_index().rename(columns={'comentarios': 'NumComentarios', 'longitud': 'LongitudPromedio'})
@@ -128,7 +130,7 @@ def show_export_button(df):
     bins = list(range(0, int(df['longitud'].max()) + 50, 50))
     df_temp = df.copy()
     df_temp['rango_longitud'] = pd.cut(df_temp['longitud'], bins=bins, right=False)
-    distribucion = df_temp.groupby(['Clasificacion', 'rango_longitud']).size().reset_index(name='conteo')
+    distribucion = df_temp.groupby(['Clasificacion', 'rango_longitud'], observed=False).size().reset_index(name='conteo')
 
     # Corregir el rango - convertir a string y extraer valores con regex
     distribucion['rango_str'] = distribucion['rango_longitud'].astype(str)
@@ -149,4 +151,13 @@ def show_export_button(df):
         file_name="reporte_comentarios.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         key="download_excel_export"
+    )
+
+    pdf_bytes = generar_pdf(df, color_discrete_map)
+    st.download_button(
+        label="📄 Descargar reporte PDF de la vista",
+        data=pdf_bytes,
+        file_name="reporte_comentarios.pdf",
+        mime="application/pdf",
+        key="download_pdf_export"
     )
