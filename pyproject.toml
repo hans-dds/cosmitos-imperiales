@@ -17,7 +17,8 @@ dependencies = [
     "pytest-cov==4.1.0",
     "pdfkit",
     "xlsxwriter",
-    "wordcloud==1.9.4"
+    "nltk==3.9.2",
+    "wordcloud==1.9.4",
     "fpdf2==2.7.9"
 ]
 
