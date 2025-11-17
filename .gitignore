@@ -20,3 +20,6 @@ dist/
 
 # Archivos de contexto para LLM
 LLM/*
+
+# Archivos de entorno
+.env
