@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gssp"
+version = "0.1.0"
+
+dependencies = [
+    "streamlit==1.50.0",
+    "openpyxl==3.1.5",
+    "scikit-learn==1.7.1",
+    "plotly==6.3.1",
+    "mysql-connector-python==9.5.0",
+    "pytest==9.0.1",
+    "pytest-cov==7.0.0",
+    "pdfkit",
+    "xlsxwriter",
+    "nltk==3.9.2",
+    "wordcloud==1.9.4",
+    "python-dotenv==1.2.1",
+    "kaleido==0.2.1",
+    "fpdf2==2.7.9"
+]
+
+[project.optional-dependencies]
+dev = [
+    "flake8==7.3.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
