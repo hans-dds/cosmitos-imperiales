@@ -18,7 +18,8 @@ from fpdf import FPDF
 if TYPE_CHECKING:
     import plotly.graph_objs
 
-from domain.services.metrics_calculator import calculate_comment_length, calculate_summary_metrics, get_color_map
+from domain.services.metrics_calculator import calculate_comment_length, calculate_summary_metrics
+from infrastructure.ui.constants import get_color_map
 
 # Ajustes generales del reporte
 _MAX_COMMENTS = 15

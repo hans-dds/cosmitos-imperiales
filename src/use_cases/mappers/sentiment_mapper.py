@@ -2,7 +2,8 @@
 Mapper para convertir valores numéricos de clasificación a objetos Sentiment.
 
 Este módulo encapsula la lógica de conversión entre representaciones numéricas
-y de dominio de los sentimientos, manteniendo la lógica de dominio fuera de los adaptadores.
+y de dominio de los sentimientos. Está en la capa de casos de uso porque
+trabaja con pandas (representación técnica) y lo convierte a dominio.
 """
 
 import pandas as pd

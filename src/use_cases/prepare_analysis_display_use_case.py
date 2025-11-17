@@ -7,7 +7,8 @@ antes de mostrarlos en la UI.
 
 import pandas as pd
 from typing import Tuple, Dict
-from domain.services.metrics_calculator import calculate_comment_length, get_color_map
+from domain.services.metrics_calculator import calculate_comment_length
+from infrastructure.ui.constants import get_color_map
 
 
 class PrepareAnalysisDisplayUseCase:

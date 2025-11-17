@@ -142,9 +142,9 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                 query = f"SELECT * FROM `{name}`"
                 df = pd.read_sql(query, conn)
                 
-                # Usar el mapper del dominio para convertir clasificaciones
+                # Usar el mapper para convertir clasificaciones
                 if not df.empty and 'Clasificacion' in df.columns:
-                    from domain.mappers.sentiment_mapper import convert_dataframe_classifications
+                    from use_cases.mappers.sentiment_mapper import convert_dataframe_classifications
                     df = convert_dataframe_classifications(df)
                 
                 # Agregar Fiabilidad si no existe

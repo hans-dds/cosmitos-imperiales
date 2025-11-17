@@ -68,16 +68,4 @@ def calculate_summary_metrics(df: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
-def get_color_map() -> Dict[str, str]:
-    """
-    Retorna el mapa de colores para las clasificaciones.
-    
-    Returns:
-        Diccionario que mapea clasificaciones a colores
-    """
-    return {
-        'Promotor': '#00CC96',
-        'Detractor': '#EF553B',
-        'Neutro': '#636EFA'
-    }
 
