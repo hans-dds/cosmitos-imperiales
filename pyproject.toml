@@ -25,4 +25,4 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["src/main"] # busca los paquetes en 'src/main'.
+where = ["src/"] # busca los paquetes en 'src/main'.
