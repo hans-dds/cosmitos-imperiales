@@ -14,10 +14,27 @@ class PandasDataCleaner(IDataCleaner):
     def clean_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
         """
         Limpia los datos de reseñas en un DataFrame de pandas.
+        Además de las transformaciones existentes, intenta detectar y normalizar
+        una columna de fecha para permitir análisis por mes/año en la capa de UI.
         """
         df = raw_data.copy()
 
-        # Estandarizar nombres de columnas
+        # Detectar y normalizar columna de fecha (si existe)
+        # Buscamos cualquier columna que contenga la palabra 'fecha' (sin acentos)
+        date_column = None
+        for col in df.columns:
+            if 'fecha' in str(col).lower():
+                date_column = col
+                break
+        
+        if date_column is not None:
+            # Renombrar a un nombre estándar utilizado en toda la aplicación
+            if date_column != 'fecha':
+                df.rename(columns={date_column: 'fecha'}, inplace=True)
+            # Convertir a tipo datetime; los valores no convertibles quedan como NaT
+            df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
+
+        # Estandarizar nombres de columnas de puntuaciones y comentarios
         df.rename(
             columns={'Calificacion': 'calificacion',
                      'Comentarios': 'comentarios'}, inplace=True)

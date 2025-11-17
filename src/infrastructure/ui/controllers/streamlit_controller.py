@@ -8,6 +8,7 @@ from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 
 
 class StreamlitController:
@@ -81,6 +82,9 @@ class StreamlitController:
             Tupla con (éxito, DataFrame cargado, mensaje de error)
         """
         try:
+            if analysis_name == ALL_ANALYSES_OPTION:
+                return self._handle_load_all_analyses()
+            
             loaded_df = self._load_analysis_use_case.execute(analysis_name)
             if loaded_df.empty:
                 return False, None, f"No se encontraron datos para el análisis '{analysis_name}'."
@@ -141,4 +145,33 @@ class StreamlitController:
             Tupla con (DataFrame preparado, mapa de colores)
         """
         return self._prepare_analysis_display_use_case.execute(df)
+    
+    def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
+        """
+        Carga y consolida todos los análisis guardados en la base de datos.
+        
+        Returns:
+            Tupla con (éxito, DataFrame consolidado, mensaje de error)
+        """
+        try:
+            analysis_names = self._list_analyses_use_case.execute()
+            if not analysis_names:
+                return False, None, "No hay análisis guardados para consolidar."
+            
+            dataframes = []
+            for name in analysis_names:
+                df = self._load_analysis_use_case.execute(name)
+                if df.empty:
+                    continue
+                df = df.copy()
+                df['analysis_name'] = name
+                dataframes.append(df)
+            
+            if not dataframes:
+                return False, None, "No se encontraron datos en los análisis guardados."
+            
+            combined_df = pd.concat(dataframes, ignore_index=True)
+            return True, combined_df, None
+        except Exception as e:
+            return False, None, f"Error al consolidar los análisis: {str(e)}"
 

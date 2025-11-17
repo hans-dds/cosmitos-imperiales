@@ -57,8 +57,24 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                         comentarios TEXT,
                         calificacion FLOAT,
                         Clasificacion VARCHAR(255),
-                        Fiabilidad VARCHAR(255)
+                        Fiabilidad VARCHAR(255),
+                        fecha DATE NULL
                     )""")
+
+                    # Construir la sentencia de inserción dinámicamente para
+                    # mantener compatibilidad con datos sin columna de fecha.
+                    base_columns = ["comentarios", "calificacion", "Clasificacion", "Fiabilidad"]
+                    insert_columns = list(base_columns)
+                    has_fecha = 'fecha' in data.columns
+                    if has_fecha:
+                        insert_columns.append('fecha')
+                    
+                    placeholders = ", ".join(["%s"] * len(insert_columns))
+                    sql = (
+                        f"INSERT INTO `{table_name}` "
+                        f"({', '.join(insert_columns)}) "
+                        f"VALUES ({placeholders})"
+                    )
 
                     for _, row in data.iterrows():
                         # Asegurar que Fiabilidad existe en el row
@@ -67,12 +83,30 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                         if isinstance(fiabilidad, (int, float)):
                             fiabilidad = str(fiabilidad)
                         
-                        sql = (f"INSERT INTO `{table_name}` "
-                               f"(comentarios, calificacion, Clasificacion, Fiabilidad) "
-                               "VALUES (%s, %s, %s, %s)")
-                        val = (row['comentarios'], row['calificacion'],
-                               row['Clasificacion'], fiabilidad)
-                        cursor.execute(sql, val)
+                        values = [
+                            row['comentarios'],
+                            row['calificacion'],
+                            row['Clasificacion'],
+                            fiabilidad,
+                        ]
+                        
+                        if has_fecha:
+                            # Si la columna está en datetime, extraer solo la fecha;
+                            # si no, dejar que el conector intente convertirla.
+                            fecha_val = row.get('fecha')
+                            if pd.notna(fecha_val) and hasattr(fecha_val, 'date'):
+                                fecha_val = fecha_val.date()
+                            elif pd.isna(fecha_val):
+                                fecha_val = None
+                            else:
+                                # Intentar convertir si es string u otro tipo
+                                try:
+                                    fecha_val = pd.to_datetime(fecha_val).date()
+                                except:
+                                    fecha_val = None
+                            values.append(fecha_val)
+                        
+                        cursor.execute(sql, values)
                     conn.commit()
             msg = f"Datos guardados exitosamente en la tabla MySQL '{table_name}'."
             return True, msg
@@ -103,14 +137,10 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                 if not all(c.isalnum() or c == '_' for c in name):
                     raise ValueError(f"Nombre de tabla inválido: {name}")
                 
-                # Intentar cargar con Fiabilidad si existe
-                query = f"SELECT comentarios, calificacion, Clasificacion, Fiabilidad FROM `{name}`"
-                try:
-                    df = pd.read_sql(query, conn)
-                except Exception:
-                    # Si Fiabilidad no existe en la tabla, cargar sin ella
-                    query = f"SELECT comentarios, calificacion, Clasificacion FROM `{name}`"
-                    df = pd.read_sql(query, conn)
+                # Seleccionamos todas las columnas para permitir que columnas
+                # adicionales (como 'fecha') estén disponibles para la capa de UI.
+                query = f"SELECT * FROM `{name}`"
+                df = pd.read_sql(query, conn)
                 
                 # Usar el mapper del dominio para convertir clasificaciones
                 if not df.empty and 'Clasificacion' in df.columns:

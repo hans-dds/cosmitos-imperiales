@@ -7,6 +7,7 @@ from typing import Tuple, Optional
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 from infrastructure.ui.components.file_upload_component import FileUploadComponent
 from infrastructure.ui.components.delete_analysis_component import DeleteAnalysisComponent
+from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 
 
 class SidebarComponent:
@@ -67,14 +68,19 @@ class SidebarComponent:
             st.session_state.selected_analysis = None
             return None
         
+        select_options = [ALL_ANALYSES_OPTION] + saved_analyses
+        
         # Usar índice para mantener la selección actual
         current_index = 0
-        if 'selected_analysis' in st.session_state and st.session_state.selected_analysis in saved_analyses:
-            current_index = saved_analyses.index(st.session_state.selected_analysis)
+        if (
+            'selected_analysis' in st.session_state and
+            st.session_state.selected_analysis in select_options
+        ):
+            current_index = select_options.index(st.session_state.selected_analysis)
         
         selected_analysis = st.sidebar.selectbox(
             "Seleccionar análisis", 
-            saved_analyses,
+            select_options,
             index=current_index,
             key="analysis_selectbox"
         )
