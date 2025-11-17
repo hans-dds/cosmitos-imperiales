@@ -79,12 +79,113 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             return []
 
     def load_analysis(self, name: str) -> pd.DataFrame:
-        """Carga un análisis específico de una tabla de MySQL."""
+        """
+        Carga un análisis específico de una tabla de MySQL.
+        Convierte valores numéricos de clasificación a texto si es necesario.
+        """
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 query = (f"SELECT comentarios, calificacion, Clasificacion "
                          f"FROM {name}")
-                return pd.read_sql(query, conn)
+                df = pd.read_sql(query, conn)
+                
+                # Si la clasificación está en formato numérico, convertir a texto
+                if not df.empty and 'Clasificacion' in df.columns:
+                    from domain.value_objects.sentiment import Sentiment
+                    
+                    # Intentar convertir valores numéricos a texto
+                    def convert_classification(value):
+                        try:
+                            # Si es numérico, convertir
+                            if pd.notna(value):
+                                numeric_val = int(float(value))
+                                return Sentiment.from_numeric(numeric_val).value
+                            return value
+                        except (ValueError, TypeError):
+                            # Si ya es texto o no se puede convertir, retornar tal cual
+                            return value
+                    
+                    # Solo convertir si los valores son numéricos
+                    if df['Clasificacion'].dtype in ['int64', 'float64']:
+                        df['Clasificacion'] = df['Clasificacion'].apply(convert_classification)
+                    elif df['Clasificacion'].dtype == 'object':
+                        # Verificar si hay valores numéricos mezclados con texto
+                        numeric_mask = pd.to_numeric(df['Clasificacion'], errors='coerce').notna()
+                        if numeric_mask.any():
+                            df.loc[numeric_mask, 'Clasificacion'] = df.loc[numeric_mask, 'Clasificacion'].apply(convert_classification)
+                
+                return df
         except Error as e:
             print(f"Error al cargar el análisis '{name}': {e}")
             return pd.DataFrame()
+
+    def delete_analysis(self, name: str) -> Tuple[bool, str]:
+        """
+        Elimina un análisis guardado de la base de datos MySQL.
+        También intenta eliminar el archivo CSV asociado si existe.
+        
+        Args:
+            name: El nombre de la tabla/análisis a eliminar.
+            
+        Returns:
+            Tupla con (éxito, mensaje)
+        """
+        try:
+            # Eliminar tabla de MySQL
+            with mysql.connector.connect(**self._db_config) as conn:
+                with conn.cursor() as cursor:
+                    # Verificar que la tabla existe antes de intentar eliminarla
+                    cursor.execute(f"SHOW TABLES LIKE '{name}'")
+                    if not cursor.fetchone():
+                        return False, f"El análisis '{name}' no existe en la base de datos."
+                    
+                    # Eliminar la tabla
+                    cursor.execute(f"DROP TABLE IF EXISTS {name}")
+                    conn.commit()
+            
+            # Intentar eliminar el archivo CSV asociado si existe
+            # El nombre del archivo CSV se deriva del nombre de la tabla (sin el prefijo 'analisis_')
+            csv_file_name = name.replace('analisis_', '') if name.startswith('analisis_') else name
+            csv_path = os.path.join(self._csv_base_dir, f"{csv_file_name}_limpio.csv")
+            
+            csv_deleted = False
+            if os.path.exists(csv_path):
+                try:
+                    os.remove(csv_path)
+                    csv_deleted = True
+                except Exception as e:
+                    # No es crítico si no se puede eliminar el CSV
+                    print(f"Advertencia: No se pudo eliminar el archivo CSV '{csv_path}': {e}")
+            
+            msg = f"Análisis '{name}' eliminado exitosamente de la base de datos."
+            if csv_deleted:
+                msg += f" Archivo CSV también eliminado."
+            
+            return True, msg
+            
+        except Error as e:
+            return False, f"Error al eliminar el análisis '{name}': {e}"
+        except Exception as e:
+            return False, f"Error inesperado al eliminar el análisis '{name}': {e}"
+
+    def delete_multiple_analyses(self, names: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+        """
+        Elimina múltiples análisis guardados de la base de datos MySQL.
+        
+        Args:
+            names: Lista de nombres de análisis a eliminar.
+            
+        Returns:
+            Tupla con (éxito_general, lista_de_resultados)
+            donde cada resultado es (nombre, éxito, mensaje)
+        """
+        results = []
+        all_success = True
+        
+        for name in names:
+            success, message = self.delete_analysis(name)
+            results.append((name, success, message))
+            if not success:
+                all_success = False
+        
+        return all_success, results

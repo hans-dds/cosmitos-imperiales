@@ -25,7 +25,7 @@ class Settings:
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_USER: str = os.getenv("DB_USER", "user")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
-    DB_NAME: str = os.getenv("DB_NAME", "database")
+    DB_NAME: str = os.getenv("DB_NAME", "cosmitos_imperiales_db")
     logger.info("Configuración cargada: "
                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
                 f"DB_NAME={DB_NAME}, "

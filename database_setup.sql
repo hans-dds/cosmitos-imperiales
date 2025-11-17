@@ -1,24 +1,17 @@
--- Este script SQL es un ejemplo de esquema para la base de datos.
--- La aplicación crea las tablas dinámicamente, por lo que este script es solo una guía.
+-- Script SQL para inicializar la base de datos del proyecto Cosmitos Imperiales.
+-- Este script se ejecuta automáticamente cuando el contenedor MySQL se inicia por primera vez.
+-- La aplicación crea las tablas dinámicamente basadas en el nombre del archivo subido.
 
--- Script SQL para crear la base de datos y una tabla de ejemplo para el proyecto Cosmitos Imperiales.
-
--- Crear la base de datos si no existe
-CREATE DATABASE IF NOT EXISTS cosmitos_imperiales_db;
-
--- Usar la base de datos creada
+-- La base de datos ya se crea automáticamente por la variable MYSQL_DATABASE en docker-compose.yml
+-- Solo necesitamos asegurarnos de que estamos usando la base de datos correcta
 USE cosmitos_imperiales_db;
 
 -- Crear una tabla de ejemplo para los resultados del análisis de sentimientos.
--- Nota: La aplicación crea tablas dinámicamente basadas en el nombre del archivo subido.
--- Esta es solo una estructura de tabla de ejemplo.
+-- Nota: Esta es solo una estructura de tabla de ejemplo. La aplicación crea tablas
+-- dinámicamente con nombres como 'analisis_<nombre_archivo>' cuando se procesan archivos.
 CREATE TABLE IF NOT EXISTS analisis_sentimientos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     comentarios TEXT,
     calificacion FLOAT,
     Clasificacion VARCHAR(255)
-);
-
--- Se pueden crear más tablas con la misma estructura pero con diferentes nombres según sea necesario.
--- Por ejemplo, si se sube un archivo llamado 'reporte_mayo.csv', la aplicación
--- creará una tabla llamada 'analisis_reporte_mayo'.
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

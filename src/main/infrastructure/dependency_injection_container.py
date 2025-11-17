@@ -6,7 +6,9 @@ from infrastructure.config import settings
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.process_file_use_case import ProcessFileUseCase
+from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 import logging
+import os
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -39,9 +41,10 @@ class Container:
             db_config=db_config)
 
         # 2. Adaptador de Analizador de Sentimiento
-        # La ruta al modelo también debería estar en la configuración.
-        # Por ahora, la codificaré como estaba en la estructura original.
-        model_path = "src/main/clasificador_sentimiento_final.pkl"
+        # Construir la ruta al modelo de manera robusta usando __file__
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, "ML", "clasificador_sentimiento_final.pkl")
+        logger.info(f"Cargando modelo desde: {model_path}")
         self._sentiment_analyzer = JoblibSentimentAnalyzer(
             model_path=model_path)
 
@@ -74,6 +77,14 @@ class Container:
         Crea y devuelve una instancia de LoadAnalysisUseCase.
         """
         return LoadAnalysisUseCase(
+            analysis_repository=self._analysis_repository)
+
+    @property
+    def delete_analysis_use_case(self) -> DeleteAnalysisUseCase:
+        """
+        Crea y devuelve una instancia de DeleteAnalysisUseCase.
+        """
+        return DeleteAnalysisUseCase(
             analysis_repository=self._analysis_repository)
 
 

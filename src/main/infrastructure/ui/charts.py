@@ -16,7 +16,7 @@ def show_charts(df, color_map):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Distribución de Sentimientos")
+        st.subheader("Distribución de categorías")
         fig_pie = px.pie(counts, names='Clasificacion', values='cantidad',
                          color='Clasificacion', color_discrete_map=color_map,
                          hole=0.4)
@@ -27,3 +27,19 @@ def show_charts(df, color_map):
                          color='Clasificacion', text='cantidad',
                          color_discrete_map=color_map)
         st.plotly_chart(fig_bar, use_container_width=True)
+
+    # Histograma de longitud de comentarios
+    st.subheader("¿Quiénes opinan más?")
+    fig_hist = px.histogram(
+        df,
+        x='longitud',
+        color='Clasificacion',
+        nbins=15,
+        barmode='overlay',
+        opacity=0.8,
+        title='Distribución de longitud de comentarios por categoría',
+        labels={'longitud': 'Número de caracteres'},
+        color_discrete_map=color_map
+    )
+    fig_hist.update_layout(margin=dict(t=30, b=30, l=10, r=10))
+    st.plotly_chart(fig_hist, use_container_width=True)

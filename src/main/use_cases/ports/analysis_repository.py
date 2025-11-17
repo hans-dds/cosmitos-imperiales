@@ -61,3 +61,30 @@ class IAnalysisRepository(ABC):
             Un DataFrame que contiene los datos del análisis.
         """
         pass
+
+    @abstractmethod
+    def delete_analysis(self, name: str) -> Tuple[bool, str]:
+        """
+        Elimina un análisis guardado por su nombre.
+
+        Args:
+            name: El nombre del análisis a eliminar.
+
+        Returns:
+            Una tupla que contiene un indicador de éxito y un mensaje.
+        """
+        pass
+
+    @abstractmethod
+    def delete_multiple_analyses(self, names: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+        """
+        Elimina múltiples análisis guardados por sus nombres.
+
+        Args:
+            names: Lista de nombres de análisis a eliminar.
+
+        Returns:
+            Una tupla que contiene un indicador de éxito general y una lista de
+            tuplas con (nombre, éxito, mensaje) para cada análisis.
+        """
+        pass
