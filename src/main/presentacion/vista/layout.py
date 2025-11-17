@@ -65,9 +65,9 @@ def show_comments_table(df):
     Muestra una tabla filtrable por clase con un selector y un slider para
     controlar cuántos comentarios se muestran.
 
-    Requisitos del DataFrame: columnas 'Clasificacion', 'comentarios', 'calificacion', 'longitud'
+    Requisitos del DataFrame: columnas 'Clasificacion', 'comentarios', 'calificacion', 'longitud', 'Fiabilidad'
     """
-    required_columns = {'Clasificacion', 'comentarios', 'calificacion', 'longitud'}
+    required_columns = {'Clasificacion', 'comentarios', 'calificacion', 'longitud', 'Fiabilidad'}
 
     if not required_columns.issubset(df.columns):
         st.error("El DataFrame no contiene las columnas necesarias para mostrar la tabla de comentarios filtrados.")
@@ -99,10 +99,18 @@ def show_comments_table(df):
     if df_mostrar.empty:
         st.info("No hay comentarios para la selección actual.")
         return
-
+    # Modifico para mostrar tambien la columna Fiabilidad
+    # Uso `use_container_width=True` para que ocupe todo el ancho disponible
     st.dataframe(
-        df_mostrar[['calificacion', 'comentarios', 'Clasificacion']].rename(columns={'calificacion': 'Calificación', 'comentarios': 'Comentario', 'Clasificacion': 'Clasificación'}),
-        width='stretch',
+        df_mostrar[['calificacion', 'comentarios', 'Clasificacion', 'Fiabilidad']].rename(
+            columns={
+                'calificacion': 'Calificación', 
+                'comentarios': 'Comentario', 
+                'Clasificacion': 'Clasificación',
+                'Fiabilidad': 'Fiabilidad'
+            }
+        ),
+        use_container_width=True,
         hide_index=True
     )
 
@@ -111,9 +119,9 @@ def show_export_button(df):
     """
     Muestra el botón de exportación a Excel con los datos completos del análisis.
     
-    Requisitos del DataFrame: columnas 'Clasificacion', 'comentarios', 'calificacion', 'longitud'
+    Requisitos del DataFrame: columnas 'Clasificacion', 'comentarios', 'calificacion', 'longitud', 'Fiabilidad'
     """
-    required_columns = {'Clasificacion', 'comentarios', 'calificacion', 'longitud'}
+    required_columns = {'Clasificacion', 'comentarios', 'calificacion', 'longitud', 'Fiabilidad'}
 
     if not required_columns.issubset(df.columns):
         st.error("El DataFrame no contiene las columnas necesarias para la exportación.")
