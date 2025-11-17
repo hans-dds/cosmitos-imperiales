@@ -10,6 +10,8 @@ from use_cases.process_file_use_case import ProcessFileUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from adapters.llm_suggestion_generator import LLMSuggestionGenerator
+from use_cases.generate_suggestions_use_case import GenerateSuggestionsUseCase
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
 import os
@@ -58,6 +60,15 @@ class Container:
 
         # 4. Adaptador de Lector de Archivos
         self._file_reader = PandasFileReader(required_sheets=settings.EXCEL_REQUIRED_SHEETS)
+
+        # 5. Adaptador de Sugerencias (LLM)
+        if not settings.LLM_API_KEY:
+            logger.warning("LLM_API_KEY no está configurada. El generador de sugerencias fallará.")
+        
+        self._suggestion_generator = LLMSuggestionGenerator(
+            api_key=settings.LLM_API_KEY,
+            api_url=settings.LLM_API_URL
+        )
 
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
@@ -122,6 +133,16 @@ class Container:
             list_analyses_use_case=self.list_analyses_use_case,
             delete_analysis_use_case=self.delete_analysis_use_case,
             prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
+        )
+
+    @property
+    def generate_suggestions_use_case(self) -> GenerateSuggestionsUseCase:
+        """
+        Crea y devuelve una instancia de GenerateSuggestionsUseCase.
+        """
+        return GenerateSuggestionsUseCase(
+            suggestion_generator=self._suggestion_generator,
+            analysis_repository=self._analysis_repository
         )
 
 
