@@ -11,6 +11,7 @@ from infrastructure.ui.components.charts_component import ChartsComponent
 from infrastructure.ui.components.table_component import TableComponent
 from infrastructure.ui.components.export_component import ExportComponent
 from infrastructure.ui.components.word_cloud_component import WordCloudComponent
+from infrastructure.ui.components.suggestions_component import SuggestionsComponent
 
 
 class MainContent:
@@ -142,6 +143,24 @@ class MainContent:
 
         # Aplicar filtros de rango de fechas (por mes/año) antes de renderizar
         df_filtered = self._apply_monthly_date_filter(df_prepared)
+
+        # Usamos cache_data para no llamar al LLM en cada rerun de Streamlit
+        @st.cache_data(show_spinner="Analizando sugerencias de mejora...")
+        def get_suggestions(analysis_name_to_load: str):
+            success, suggestions, error = self._controller.handle_get_suggestions(
+                analysis_name_to_load
+            )
+            if not success:
+                st.warning(f"No se pudieron generar sugerencias: {error}")
+                return []
+            return suggestions
+
+        # Llamamos a la función cacheada
+        suggestions_list = get_suggestions(analysis_name)
+        
+        # Renderizar el nuevo componente
+        self._suggestions.render(suggestions_list)
+        st.divider() # Separador visual
 
         # Renderizar componentes
         self._charts.render(df_filtered, color_map)
