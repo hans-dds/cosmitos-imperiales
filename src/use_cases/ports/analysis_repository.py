@@ -42,7 +42,8 @@ class IAnalysisRepository(ABC):
     @abstractmethod
     def list_analyses(self) -> List[str]:
         """
-        Lista los nombres de los análisis guardados previamente (ej. tablas en la BD).
+        Lista los nombres de los análisis guardados previamente
+        (ej. tablas en la BD).
 
         Returns:
             Una lista de nombres de análisis.
@@ -76,7 +77,12 @@ class IAnalysisRepository(ABC):
         pass
 
     @abstractmethod
-    def delete_multiple_analyses(self, names: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+    def delete_multiple_analyses(
+            self,
+            names: List[str]) -> Tuple[bool,
+                                       List[Tuple[str,
+                                                  bool,
+                                                  str]]]:
         """
         Elimina múltiples análisis guardados por sus nombres.
 

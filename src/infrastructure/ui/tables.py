@@ -8,30 +8,30 @@ def show_comments_table(df: pd.DataFrame):
     - calificacion
     - comentarios
     - Clasificacion (Detractor, Neutro, Promotor)
-    
     Args:
         df: DataFrame con las columnas requeridas
     """
     st.subheader("Comentarios Filtrados")
-    
     # Validar que existan las columnas requeridas
     required_columns = ['calificacion', 'comentarios', 'Clasificacion']
-    missing_columns = [col for col in required_columns if col not in df.columns]
-    
+    missing_columns = [
+        col for col in required_columns if col not in df.columns]
     if missing_columns:
-        st.warning(f"No hay datos completos para mostrar. Faltan las columnas: {', '.join(missing_columns)}")
+        st.warning(
+            f"No hay datos completos para mostrar. Faltan las columnas: "
+            f"{', '.join(missing_columns)}")
         return
 
     # Crear una copia del DataFrame con solo las columnas necesarias
     display_df = df[required_columns].copy()
-    
     # Filtrar por categoría de clasificación
-    categories = ['Todas'] + sorted(
-        display_df['Clasificacion'].dropna().unique().tolist())
+    categories = ['Todas'] + \
+        sorted(display_df['Clasificacion'].dropna().unique().tolist())
     selected_category = st.selectbox("Filtrar por categoría", categories)
 
     if selected_category != 'Todas':
-        display_df = display_df[display_df['Clasificacion'] == selected_category]
+        display_df = display_df[display_df['Clasificacion']
+                                == selected_category]
 
     # Control de cantidad de comentarios a mostrar
     max_comments = max(10, len(display_df))
