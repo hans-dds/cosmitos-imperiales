@@ -23,6 +23,6 @@ class ExportComponent:
             label="📎 Descargar Reporte en Excel",
             data=generate_excel_export(df),
             file_name=file_name,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mime="application/vnd.openxmlformats-officedocument."
+                 "spreadsheetml.sheet"
         )
-

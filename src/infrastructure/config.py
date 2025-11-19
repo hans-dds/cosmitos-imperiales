@@ -27,18 +27,19 @@ class Settings:
     DB_USER: str = os.getenv("DB_USER", "user")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
     DB_NAME: str = os.getenv("DB_NAME", "cosmitos_imperiales_db")
-    
+
     # Configuración de archivos Excel
     EXCEL_REQUIRED_SHEETS: List[str] = os.getenv(
         "EXCEL_REQUIRED_SHEETS", "ATC,Encuesta salida"
     ).split(",")
-    
+
     # Configuración de directorio CSV
     CSV_BASE_DIR: str = os.getenv("CSV_BASE_DIR", "datos_analizados")
-    
+
     # Configuración de UI
-    APP_TITLE: str = os.getenv("APP_TITLE", "Gestor de Satisfacción y Seguimiento de Posventa")
-    
+    APP_TITLE: str = os.getenv(
+        "APP_TITLE", "Gestor de Satisfacción y Seguimiento de Posventa")
+
     logger.info("Configuración cargada: "
                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
                 f"DB_NAME={DB_NAME}, "
