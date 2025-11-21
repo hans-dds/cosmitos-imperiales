@@ -22,3 +22,6 @@ jobs:
       - name: Run pytest
         run: |
           pytest --cov=src --cov-report=xml
+
+      - name: Run lint
+        uses: ./.github/workflows/lint.yaml@main

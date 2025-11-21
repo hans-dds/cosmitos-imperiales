@@ -134,8 +134,8 @@ class MainContent:
         self._charts.render(df_filtered, color_map)
         self._word_cloud.render(df_filtered)
         self._table.render(df_filtered)
-        self._export.render(df_filtered, analysis_name)
-
+        self._export.render(df_filtered, analysis_name, color_map)
+    
     def _apply_monthly_date_filter(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica un filtro de fechas por mes/año al DataFrame según la
