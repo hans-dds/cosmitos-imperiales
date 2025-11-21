@@ -27,3 +27,4 @@ LLM/*
 # Nuevos analisis guardados
 datos_analizados/
 
+uv.lock
