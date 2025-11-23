@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Construir la ruta al archivo .env en la raíz del proyecto
 dotenv_path = os.path.join(
-    os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), '.env')
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 
@@ -27,6 +26,7 @@ class Settings:
     DB_USER: str = os.getenv("DB_USER", "user")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
     DB_NAME: str = os.getenv("DB_NAME", "cosmitos_imperiales_db")
+    DB_PORT: int = int(os.getenv("DB_PORT", 3306))
 
     # Configuración de archivos Excel
     EXCEL_REQUIRED_SHEETS: List[str] = os.getenv(
@@ -42,7 +42,7 @@ class Settings:
 
     logger.info("Configuración cargada: "
                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
-                f"DB_NAME={DB_NAME}, "
+                f"DB_NAME={DB_NAME}, DB_PORT={DB_PORT}, "
                 f"DB_PASSWORD={DB_PASSWORD}, "
                 f"EXCEL_REQUIRED_SHEETS={EXCEL_REQUIRED_SHEETS}, "
                 f"CSV_BASE_DIR={CSV_BASE_DIR}")
