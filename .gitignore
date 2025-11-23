@@ -28,3 +28,5 @@ LLM/*
 datos_analizados/
 
 uv.lock
+
+.idea/
