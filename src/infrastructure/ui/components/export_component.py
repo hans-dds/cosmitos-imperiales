@@ -11,14 +11,18 @@ from infrastructure.ui.export_pdf import generate_pdf_export
 class ExportComponent:
     """Componente responsable de la exportación de análisis."""
 
-    def render(self, df: pd.DataFrame, analysis_name: str, color_map: Dict[str, str]):
+    def render(self,
+               df: pd.DataFrame,
+               analysis_name: str,
+               color_map: Dict[str, str]):
         """
         Renderiza los controles de exportación disponibles.
 
         Args:
             df: DataFrame con los datos a exportar
             analysis_name: Nombre del análisis
-            color_map: Mapa de colores usado por las visualizaciones principales
+            color_map: Mapa de colores usado
+                por las visualizaciones principales
         """
         excel_file_name = f"reporte_{analysis_name.replace(' ', '_')}.xlsx"
         pdf_file_name = excel_file_name.replace('.xlsx', '.pdf')
@@ -30,7 +34,8 @@ class ExportComponent:
                 label="📎 Descargar Reporte en Excel",
                 data=generate_excel_export(df),
                 file_name=excel_file_name,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                mime="application/vnd.openxmlformats" +
+                     "-officedocument.spreadsheetml.sheet"
             )
 
         with col_pdf:
@@ -45,4 +50,3 @@ class ExportComponent:
                     file_name=pdf_file_name,
                     mime="application/pdf"
                 )
-
