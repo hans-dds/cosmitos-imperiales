@@ -1,6 +1,9 @@
 """Componente para exportar análisis a Excel y PDF."""
 
 import streamlit as st
+"""Componente para exportar análisis a Excel y PDF."""
+
+import streamlit as st
 import pandas as pd
 from typing import Dict
 
@@ -40,7 +43,8 @@ class ExportComponent:
                     label="📎 Descargar Reporte en Excel",
                     data=excel_bytes,
                     file_name=excel_file_name,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
                 )
                 if clicked:
                     success, message, path = self._controller.handle_save_report(
@@ -63,7 +67,8 @@ class ExportComponent:
                         label="🖨️ Descargar Reporte en PDF",
                         data=pdf_bytes,
                         file_name=pdf_file_name,
-                        mime="application/pdf"
+                        mime="application/pdf",
+                        use_container_width=True
                     )
                     if clicked_pdf:
                         success, message, path = self._controller.handle_save_report(
@@ -120,6 +125,4 @@ class ExportComponent:
 
         with tab_historial:
             ReportHistoryComponent().render(self._controller)
-
-            # Botón rápido en la parte superior para ir al historial desde otros lugares
             st.caption("Tip: usa las pestañas arriba para cambiar de vista.")
