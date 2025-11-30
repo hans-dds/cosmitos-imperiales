@@ -7,6 +7,7 @@ from typing import Dict
 from infrastructure.ui.export import generate_excel_export
 from infrastructure.ui.export_pdf import generate_pdf_export
 from infrastructure.dependency_injection_container import container
+from infrastructure.ui.components.report_history_component import ReportHistoryComponent
 
 
 class ExportComponent:
@@ -29,12 +30,24 @@ class ExportComponent:
         col_excel, col_pdf = st.columns(2)
 
         with col_excel:
-            st.download_button(
+            controller = container.streamlit_controller
+            excel_bytes = generate_excel_export(df)
+            clicked = st.download_button(
                 label="📎 Descargar Reporte en Excel",
-                data=generate_excel_export(df),
+                data=excel_bytes,
                 file_name=excel_file_name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+            if clicked:
+                success, message, path = controller.handle_save_report(
+                    analysis_name=analysis_name,
+                    df=df,
+                    report_format='excel'
+                )
+                if success:
+                    st.toast("Reporte Excel guardado en historial")
+                else:
+                    st.warning(f"No se pudo guardar en historial: {message}")
 
         with col_pdf:
             try:
@@ -42,12 +55,27 @@ class ExportComponent:
             except ValueError as error:
                 st.info(f"PDF no disponible: {error}")
             else:
-                st.download_button(
+                clicked_pdf = st.download_button(
                     label="🖨️ Descargar Reporte en PDF",
                     data=pdf_bytes,
                     file_name=pdf_file_name,
                     mime="application/pdf"
                 )
+                if clicked_pdf:
+                    controller = container.streamlit_controller
+                    success, message, path = controller.handle_save_report(
+                        analysis_name=analysis_name,
+                        df=df,
+                        report_format='pdf',
+                        color_map=color_map,
+                    )
+                    if success:
+                        st.toast("Reporte PDF guardado en historial")
+                    else:
+                        st.warning(f"No se pudo guardar en historial: {message}")
+
+        st.markdown("---")
+        ReportHistoryComponent().render(container.streamlit_controller)
 
         st.markdown("---")
         st.write("📧 **Enviar reporte por correo**")
