@@ -4,7 +4,8 @@ from use_cases.ports.file_reader import IFileReader
 
 class ReadFileUseCase:
     """
-    Este caso de uso lee un archivo CSV o Excel y lo convierte en un DataFrame.
+    Este caso de uso lee un archivo CSV o Excel y lo convierte en un
+    DataFrame.
     """
 
     def __init__(self, file_reader: IFileReader):
@@ -22,7 +23,7 @@ class ReadFileUseCase:
             Un DataFrame con los datos del archivo.
 
         Raises:
-            ValueError: Si el tipo de archivo no es soportado o hay un error al leerlo.
+            ValueError: Si el tipo de archivo no es soportado o hay un error
+            al leerlo.
         """
         return self._file_reader.read_file(file_object, file_type)
-

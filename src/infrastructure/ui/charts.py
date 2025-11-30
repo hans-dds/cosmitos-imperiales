@@ -5,7 +5,8 @@ import plotly.express as px
 def show_charts(df, color_map):
     """Muestra gráficos para el DataFrame dado."""
     if 'Clasificacion' not in df.columns or 'comentarios' not in df.columns:
-        st.error("El DataFrame no tiene las columnas requeridas para los gráficos.")
+        st.error(
+            "El DataFrame no tiene las columnas requeridas para los gráficos.")
         return
 
     if 'longitud' not in df.columns:

@@ -13,8 +13,8 @@ class IDataCleaner(ABC):
         Toma un DataFrame sin procesar y devuelve una versión limpia del mismo.
 
         Args:
-            raw_data: DataFrame que contiene al menos las columnas 'comentarios'
-            y 'calificacion'.
+            raw_data: DataFrame que contiene al menos las columnas
+            'comentarios' y 'calificacion'.
 
         Returns:
             Un DataFrame limpio y listo para el análisis.

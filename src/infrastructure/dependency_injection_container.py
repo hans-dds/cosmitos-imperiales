@@ -30,7 +30,7 @@ class Container:
     """
 
     def __init__(self):
-        # Crear instancias de nuestros adaptadores
+        # Crear instances de nuestros adaptadores
 
         # 1. Adaptador de Repositorio
         db_config = {
@@ -40,8 +40,8 @@ class Container:
             'database': settings.DB_NAME
         }
 
-        logger.info("Inicializando SQLandCSVAnalysisRepository con la configuración de BD: "
-                    f"{db_config}")
+        logger.info("Inicializando SQLandCSVAnalysisRepository con la"
+                    f" configuración de BD: {db_config}")
 
         self._analysis_repository = SQLandCSVAnalysisRepository(
             db_config=db_config,
@@ -50,7 +50,8 @@ class Container:
         # 2. Adaptador de Analizador de Sentimiento
         # Construir la ruta al modelo de manera robusta usando __file__
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, "ML", "clasificador_sentimiento_final.pkl")
+        model_path = os.path.join(
+            current_dir, "ML", "clasificador_sentimiento_final.pkl")
         logger.info(f"Cargando modelo desde: {model_path}")
         self._sentiment_analyzer = JoblibSentimentAnalyzer(
             model_path=model_path)
@@ -59,7 +60,8 @@ class Container:
         self._data_cleaner = PandasDataCleaner()
 
         # 4. Adaptador de Lector de Archivos
-        self._file_reader = PandasFileReader(required_sheets=settings.EXCEL_REQUIRED_SHEETS)
+        self._file_reader = PandasFileReader(
+            required_sheets=settings.EXCEL_REQUIRED_SHEETS)
 
         # 5. Adaptador de Envío de Correos
         self._email_sender = SmtpEmailSender(
@@ -114,7 +116,8 @@ class Container:
         return ReadFileUseCase(file_reader=self._file_reader)
 
     @property
-    def prepare_analysis_display_use_case(self) -> PrepareAnalysisDisplayUseCase:
+    def prepare_analysis_display_use_case(
+            self) -> PrepareAnalysisDisplayUseCase:
         """
         Crea y devuelve una instancia de PrepareAnalysisDisplayUseCase.
         """
