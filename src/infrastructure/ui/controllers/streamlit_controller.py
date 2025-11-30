@@ -6,8 +6,8 @@ from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
-from use_cases.prepare_analysis_display_use_case import \
-    PrepareAnalysisDisplayUseCase
+from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from use_cases.send_results_email_use_case import SendResultsEmailUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 
 
@@ -25,14 +25,15 @@ class StreamlitController:
         list_analyses_use_case: ListAnalysesUseCase,
         delete_analysis_use_case: DeleteAnalysisUseCase,
         prepare_analysis_display_use_case: PrepareAnalysisDisplayUseCase,
+        send_results_email_use_case: SendResultsEmailUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
         self._load_analysis_use_case = load_analysis_use_case
         self._list_analyses_use_case = list_analyses_use_case
         self._delete_analysis_use_case = delete_analysis_use_case
-        self._prepare_analysis_display_use_case = \
-            prepare_analysis_display_use_case
+        self._prepare_analysis_display_use_case = prepare_analysis_display_use_case
+        self._send_results_email_use_case = send_results_email_use_case
 
     def handle_file_upload(
         self,
@@ -139,9 +140,31 @@ class StreamlitController:
             Tupla con (DataFrame preparado, mapa de colores)
         """
         return self._prepare_analysis_display_use_case.execute(df)
+    
+    def handle_send_email(
+        self,
+        to_emails: List[str],
+        analysis_name: str,
+        df: pd.DataFrame,
+        attachment_type: str = 'excel',
+        color_map: Dict[str, str] = None
+    ) -> Tuple[bool, str]:
+        """
+        Maneja el envío de resultados por correo electrónico.
 
-    def _handle_load_all_analyses(
-            self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
+        Args:
+            to_emails: Lista de correos destinatarios.
+            analysis_name: Nombre del análisis.
+            df: DataFrame con los datos del análisis.
+            attachment_type: Tipo de adjunto ('excel' o 'pdf').
+            color_map: Mapa de colores (necesario para PDF).
+
+        Returns:
+            Tupla con (éxito, mensaje)
+        """
+        return self._send_results_email_use_case.execute(to_emails, analysis_name, df, attachment_type, color_map)
+
+    def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Carga y consolida todos los análisis guardados en la base de datos.
         Returns:

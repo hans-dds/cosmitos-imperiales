@@ -40,6 +40,12 @@ class Settings:
     APP_TITLE: str = os.getenv(
         "APP_TITLE", "Gestor de Satisfacción y Seguimiento de Posventa")
 
+    # Configuración de Email (SMTP)
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "localhost")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "1025"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@cosmitos.com")
     logger.info("Configuración cargada: "
                 f"DB_HOST={DB_HOST}, DB_USER={DB_USER},"
                 f"DB_NAME={DB_NAME}, "
