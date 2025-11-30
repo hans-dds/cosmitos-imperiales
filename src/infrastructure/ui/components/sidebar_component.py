@@ -46,9 +46,9 @@ class SidebarComponent:
         uploaded_file = self._file_upload.render()
         # Renderizar sección de análisis guardados
         analysis_to_load = self._render_saved_analyses()
-        # Renderizar componente de eliminación
+        # Renderizar componente de eliminación justo debajo, sin separador visual extra
         saved_analyses = self._controller.get_saved_analyses()
-        self._delete_analysis.render(saved_analyses)
+        self._delete_analysis.render(saved_analyses, embedded=False)
         return uploaded_file, analysis_to_load
 
     def _render_saved_analyses(self) -> Optional[str]:
@@ -57,7 +57,7 @@ class SidebarComponent:
         Returns:
             Nombre del análisis a cargar o None
         """
-        st.sidebar.header("📂 Ver Análisis Guardado")
+        st.sidebar.subheader("📂 Análisis guardados")
         saved_analyses = self._controller.get_saved_analyses()
         if not saved_analyses:
             st.sidebar.info("No hay análisis guardados en la base de datos.")

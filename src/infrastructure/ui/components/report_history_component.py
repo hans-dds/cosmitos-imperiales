@@ -24,11 +24,10 @@ class ReportHistoryComponent:
                 st.write(f"{str(r['created_at'])} | {dr}")
             with cols[3]:
                 path = r['file_path']
-                if not path or not os.path.exists(path):
+                ok, data = controller.get_report_bytes(path)
+                if not ok or data is None:
                     st.button("Archivo no disponible", disabled=True, key=f"missing_{r['id']}")
                 else:
-                    with open(path, 'rb') as f:
-                        data = f.read()
                     st.download_button(
                         label="Descargar",
                         data=data,

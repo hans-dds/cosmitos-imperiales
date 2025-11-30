@@ -6,12 +6,14 @@ from typing import Dict
 
 from infrastructure.ui.export import generate_excel_export
 from infrastructure.ui.export_pdf import generate_pdf_export
-from infrastructure.dependency_injection_container import container
 from infrastructure.ui.components.report_history_component import ReportHistoryComponent
 
 
 class ExportComponent:
     """Componente responsable de la exportación de análisis."""
+
+    def __init__(self, controller):
+        self._controller = controller
 
     def render(self, df: pd.DataFrame, analysis_name: str, color_map: Dict[str, str]):
         """
@@ -33,7 +35,6 @@ class ExportComponent:
             col_excel, col_pdf = st.columns(2)
 
             with col_excel:
-                controller = container.streamlit_controller
                 excel_bytes = generate_excel_export(df)
                 clicked = st.download_button(
                     label="📎 Descargar Reporte en Excel",
@@ -42,7 +43,7 @@ class ExportComponent:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 if clicked:
-                    success, message, path = controller.handle_save_report(
+                    success, message, path = self._controller.handle_save_report(
                         analysis_name=analysis_name,
                         df=df,
                         report_format='excel'
@@ -65,8 +66,7 @@ class ExportComponent:
                         mime="application/pdf"
                     )
                     if clicked_pdf:
-                        controller = container.streamlit_controller
-                        success, message, path = controller.handle_save_report(
+                        success, message, path = self._controller.handle_save_report(
                             analysis_name=analysis_name,
                             df=df,
                             report_format='pdf',
@@ -105,8 +105,7 @@ class ExportComponent:
                             st.warning("No se detectaron correos válidos.")
                         else:
                             with st.spinner(f"Enviando correo a {len(to_emails)} destinatarios..."):
-                                controller = container.streamlit_controller
-                                success, message = controller.handle_send_email(
+                                success, message = self._controller.handle_send_email(
                                     to_emails=to_emails,
                                     analysis_name=analysis_name,
                                     df=df,
@@ -120,7 +119,7 @@ class ExportComponent:
                                     st.error(message)
 
         with tab_historial:
-            ReportHistoryComponent().render(container.streamlit_controller)
+            ReportHistoryComponent().render(self._controller)
 
             # Botón rápido en la parte superior para ir al historial desde otros lugares
             st.caption("Tip: usa las pestañas arriba para cambiar de vista.")

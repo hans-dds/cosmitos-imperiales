@@ -22,7 +22,7 @@ class DeleteAnalysisComponent:
         """
         self._controller = controller
 
-    def render(self, saved_analyses: List[str]):
+    def render(self, saved_analyses: List[str], embedded: bool = False):
         """
         Renderiza el componente de eliminación de análisis.
         Args:
@@ -30,26 +30,30 @@ class DeleteAnalysisComponent:
         """
         if not saved_analyses:
             return
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("🗑️ Eliminar Análisis")
-        # Inicializar estado para análisis seleccionados para eliminar
-        if 'analyses_to_delete' not in st.session_state:
-            st.session_state.analyses_to_delete = []
-        # Multiselect para seleccionar análisis a eliminar
-        selected_to_delete = st.sidebar.multiselect(
-            "Análisis seleccionados:",
-            saved_analyses,
-            default=st.session_state.analyses_to_delete,
-            key="delete_multiselect",
-            placeholder="Selecciona los análisis a eliminar"
-        )
-        # Actualizar el estado con la selección del multiselect
-        st.session_state.analyses_to_delete = selected_to_delete
-        # Botón para eliminar los análisis seleccionados
-        if st.session_state.analyses_to_delete:
-            self._render_delete_confirmation(saved_analyses)
+        if not embedded:
+            expander_ctx = st.sidebar.expander("🗑️ Eliminar análisis", expanded=False)
         else:
-            st.sidebar.info("Selecciona uno o más análisis para eliminar.")
+            expander_ctx = st.expander("🗑️ Eliminar análisis", expanded=False)
+
+        with expander_ctx:
+            # Inicializar estado para análisis seleccionados para eliminar
+            if 'analyses_to_delete' not in st.session_state:
+                st.session_state.analyses_to_delete = []
+            # Multiselect para seleccionar análisis a eliminar
+            selected_to_delete = st.multiselect(
+                "Análisis seleccionados:",
+                saved_analyses,
+                default=st.session_state.analyses_to_delete,
+                key="delete_multiselect",
+                placeholder="Selecciona los análisis a eliminar"
+            )
+            # Actualizar el estado con la selección del multiselect
+            st.session_state.analyses_to_delete = selected_to_delete
+            # Botón para eliminar los análisis seleccionados
+            if st.session_state.analyses_to_delete:
+                self._render_delete_confirmation(saved_analyses)
+            else:
+                st.info("Selecciona uno o más análisis para eliminar.")
 
     def _render_delete_confirmation(self, saved_analyses: List[str]):
         """
@@ -58,13 +62,13 @@ class DeleteAnalysisComponent:
             saved_analyses: Lista de nombres de análisis guardados
         """
         num_selected = len(st.session_state.analyses_to_delete)
-        delete_label = (f"🗑️ Eliminar {num_selected} análisis "
+        delete_label = (f"Eliminar {num_selected} análisis "
                         f"seleccionado{'s' if num_selected > 1 else ''}")
         # Usar un estado para confirmar la eliminación
         if 'confirm_delete' not in st.session_state:
             st.session_state.confirm_delete = False
         if not st.session_state.confirm_delete:
-            if st.sidebar.button(
+            if st.button(
                     delete_label,
                     type="secondary",
                     use_container_width=True,
@@ -85,19 +89,19 @@ class DeleteAnalysisComponent:
             saved_analyses: Lista de nombres de análisis guardados
         """
         if num_selected == len(saved_analyses):
-            st.sidebar.warning(
+            st.warning(
                 "⚠️ ¿Eliminar TODOS los análisis? Esta acción no se puede"
                 " deshacer.")
         else:
-            st.sidebar.warning(
+            st.warning(
                 f"⚠️ ¿Eliminar {num_selected} análisis seleccionado"
                 f"{'s' if num_selected > 1 else ''}?")
-            st.sidebar.write("Análisis a eliminar:")
+            st.write("Análisis a eliminar:")
             for analysis in st.session_state.analyses_to_delete:
-                st.sidebar.write(f"  • {analysis}")
-        col1, col2 = st.sidebar.columns(2)
+                st.write(f"  • {analysis}")
+        col1, col2 = st.columns(2)
         with col1:
-            confirm_btn = st.sidebar.button(
+            confirm_btn = st.button(
                 "Confirmar",
                 use_container_width=True,
                 key="confirm_delete_btn",
@@ -106,7 +110,7 @@ class DeleteAnalysisComponent:
             if confirm_btn:
                 self._execute_deletion()
         with col2:
-            cancel_btn = st.sidebar.button(
+            cancel_btn = st.button(
                 "Cancelar",
                 use_container_width=True,
                 key="cancel_delete_btn"
@@ -128,11 +132,11 @@ class DeleteAnalysisComponent:
         success_count = sum(1 for _, success, _ in results if success)
         error_count = len(results) - success_count
         if all_success:
-            st.sidebar.success(
+            st.success(
                 f"✅ {success_count} análisis eliminado"
                 f"{'s' if success_count > 1 else ''} exitosamente.")
         else:
-            st.sidebar.warning(
+            st.warning(
                 f"⚠️ {success_count} eliminado"
                 f"{'s' if success_count > 1 else ''}, "
                 f"{error_count} error{'es' if error_count > 1 else ''}."
@@ -140,7 +144,7 @@ class DeleteAnalysisComponent:
             # Mostrar errores individuales
             for name, success, message in results:
                 if not success:
-                    st.sidebar.error(f"❌ {name}: {message}")
+                    st.error(f"❌ {name}: {message}")
         # Limpiar estados relacionados
         deleted_names = st.session_state.analyses_to_delete.copy()
         if st.session_state.get('selected_analysis') in deleted_names:

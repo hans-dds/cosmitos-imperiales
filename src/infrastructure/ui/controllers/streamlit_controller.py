@@ -12,6 +12,7 @@ from use_cases.save_report_use_case import SaveReportUseCase
 from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
+import os
 
 
 class StreamlitController:
@@ -190,6 +191,23 @@ class StreamlitController:
     def clear_report_history(self) -> Tuple[bool, str]:
         """Limpia el historial de reportes."""
         return self._clear_reports_history_use_case.execute()
+
+    def get_report_bytes(self, file_path: str) -> Tuple[bool, Optional[bytes]]:
+        """Lee y devuelve el contenido del archivo de reporte.
+
+        Args:
+            file_path: Ruta absoluta al archivo del reporte.
+
+        Returns:
+            Tupla (ok, bytes) donde ok indica éxito y bytes el contenido.
+        """
+        try:
+            if not file_path or not os.path.exists(file_path):
+                return False, None
+            with open(file_path, 'rb') as f:
+                return True, f.read()
+        except Exception:
+            return False, None
 
     def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
