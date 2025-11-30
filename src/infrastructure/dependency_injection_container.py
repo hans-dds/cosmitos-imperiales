@@ -3,6 +3,7 @@ from adapters.repositories.analysis_repository_adapter import \
     SQLandCSVAnalysisRepository
 from adapters.sentiment_analyzer_adapter import JoblibSentimentAnalyzer
 from adapters.file_readers.file_reader_adapter import PandasFileReader
+from adapters.email_sender_adapter import SmtpEmailSender
 from infrastructure.config import settings
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
@@ -10,6 +11,7 @@ from use_cases.process_file_use_case import ProcessFileUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from use_cases.send_results_email_use_case import SendResultsEmailUseCase
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
 import os
@@ -58,6 +60,15 @@ class Container:
 
         # 4. Adaptador de Lector de Archivos
         self._file_reader = PandasFileReader(required_sheets=settings.EXCEL_REQUIRED_SHEETS)
+
+        # 5. Adaptador de Envío de Correos
+        self._email_sender = SmtpEmailSender(
+            smtp_server=settings.SMTP_SERVER,
+            smtp_port=settings.SMTP_PORT,
+            smtp_user=settings.SMTP_USER,
+            smtp_password=settings.SMTP_PASSWORD,
+            email_from=settings.EMAIL_FROM
+        )
 
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
@@ -110,6 +121,13 @@ class Container:
         return PrepareAnalysisDisplayUseCase()
 
     @property
+    def send_results_email_use_case(self) -> SendResultsEmailUseCase:
+        """
+        Crea y devuelve una instancia de SendResultsEmailUseCase.
+        """
+        return SendResultsEmailUseCase(email_sender=self._email_sender)
+
+    @property
     def streamlit_controller(self) -> StreamlitController:
         """
         Crea y devuelve una instancia de StreamlitController con todas las
@@ -122,6 +140,7 @@ class Container:
             list_analyses_use_case=self.list_analyses_use_case,
             delete_analysis_use_case=self.delete_analysis_use_case,
             prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
+            send_results_email_use_case=self.send_results_email_use_case,
         )
 
 
