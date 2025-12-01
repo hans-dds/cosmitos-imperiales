@@ -18,7 +18,6 @@ from infrastructure.ui.components.main_content import MainContent
 def main():
     """
     Función principal que ejecuta la aplicación Streamlit.
-    
     Esta función actúa como punto de entrada y se limita a:
     1. Configurar la página
     2. Obtener dependencias del contenedor

@@ -20,9 +20,14 @@ class DeleteAnalysisUseCase:
         Returns:
             Una tupla que contiene un indicador de éxito y un mensaje.
         """
-        return self._analysis_repository.delete_analysis(analysis_name)
+        return self._analysis_repository.delete(analysis_name)
 
-    def execute_multiple(self, analysis_names: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+    def execute_multiple(
+            self,
+            analysis_names: List[str]) -> Tuple[bool,
+                                                List[Tuple[str,
+                                                           bool,
+                                                           str]]]:
         """
         Ejecuta el caso de uso para eliminar múltiples análisis.
 
@@ -31,7 +36,7 @@ class DeleteAnalysisUseCase:
 
         Returns:
             Una tupla que contiene un indicador de éxito general y una lista de
-            resultados individuales (nombre, éxito, mensaje).
+            resultados individuales (nombre, éxito,
+                                     mensaje).
         """
-        return self._analysis_repository.delete_multiple_analyses(analysis_names)
-
+        return self._analysis_repository.delete_many(analysis_names)
