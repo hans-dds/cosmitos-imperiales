@@ -1,8 +1,8 @@
 """
 Servicio de dominio para procesar texto y generar nubes de palabras.
 
-Este módulo encapsula la lógica de procesamiento de texto para nubes de
-palabras, incluyendo normalización, stopwords y generación del corpus.
+Este módulo encapsula la lógica de procesamiento de texto para nubes de palabras,
+incluyendo normalización, stopwords y generación del corpus.
 """
 
 import re
@@ -14,8 +14,10 @@ from wordcloud import STOPWORDS
 def get_custom_stopwords() -> Set[str]:
     """
     Retorna un conjunto de stopwords personalizadas en español.
+    
     Estas son palabras comunes que no aportan información significativa
     para el análisis de sentimientos y deben ser filtradas.
+    
     Returns:
         Conjunto de stopwords personalizadas
     """
@@ -99,16 +101,17 @@ def normalize_comment(comment: str) -> str:
     """
     Normaliza un comentario: convierte a minúsculas, elimina acentos
     y mantiene solo caracteres alfanuméricos.
+    
     Esta normalización permite que las stopwords permanezcan en ASCII
     y facilita el procesamiento del texto.
+    
     Args:
         comment: Comentario a normalizar
+        
     Returns:
         Comentario normalizado
     """
-    text = unicodedata.normalize(
-        "NFKD", str(comment)).encode(
-        "ascii", "ignore").decode("ascii")
+    text = unicodedata.normalize("NFKD", str(comment)).encode("ascii", "ignore").decode("ascii")
     text = text.lower()
     text = re.sub(r"[^a-z0-9\s]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
@@ -117,9 +120,12 @@ def normalize_comment(comment: str) -> str:
 def build_corpus(comments: Iterable[str]) -> str:
     """
     Construye un corpus de texto a partir de una colección de comentarios.
+    
     Normaliza todos los comentarios y los une en un solo texto.
+    
     Args:
         comments: Iterable de comentarios
+        
     Returns:
         Corpus de texto normalizado
     """
@@ -131,7 +137,9 @@ def build_corpus(comments: Iterable[str]) -> str:
 def get_stopwords() -> Set[str]:
     """
     Retorna el conjunto completo de stopwords (estándar + personalizadas).
+    
     Returns:
         Conjunto de stopwords para filtrar palabras comunes
     """
     return STOPWORDS.union(get_custom_stopwords())
+

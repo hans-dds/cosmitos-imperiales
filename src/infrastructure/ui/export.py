@@ -11,41 +11,40 @@ from use_cases.generate_summary_use_case import GenerateSummaryUseCase
 
 
 def generate_excel_export(
-    df: pd.DataFrame,
-    resumen: pd.DataFrame = None,
+    df: pd.DataFrame, 
+    resumen: pd.DataFrame = None, 
     distribucion=None,
     generate_summary_use_case: GenerateSummaryUseCase = None
 ):
     """
-    Genera un archivo Excel a partir del DataFrame con formato mejorado y
-    gráficas.
+    Genera un archivo Excel a partir del DataFrame con formato mejorado y gráficas.
+    
     Args:
-        df: DataFrame con los datos completos (debe incluir 'calificacion',
-        'comentarios', 'Clasificacion')
-        resumen: DataFrame opcional con el resumen. Si no se proporciona,
-        se genera automáticamente.
-        distribucion: Parámetro reservado para futuras funcionalidades
-        (no se usa actualmente)
+        df: DataFrame con los datos completos (debe incluir 'calificacion', 'comentarios', 'Clasificacion')
+        resumen: DataFrame opcional con el resumen. Si no se proporciona, se genera automáticamente.
+        distribucion: Parámetro reservado para futuras funcionalidades (no se usa actualmente)
+        
     Returns:
         bytes del archivo Excel generado
     """
     output = io.BytesIO()
+    
     # Generar resumen si no se proporciona
     if resumen is None:
         if generate_summary_use_case is None:
             generate_summary_use_case = GenerateSummaryUseCase()
         resumen = generate_summary_use_case.execute(df)
+    
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         # Escribir hojas
         # Filtrar solo las columnas requeridas para la hoja de datos
-        columns_to_export = ['calificacion',
-                             'comentarios', 'Clasificacion', 'Fiabilidad']
+        columns_to_export = ['calificacion', 'comentarios', 'Clasificacion', 'Fiabilidad']
         # Asegurar que Fiabilidad existe, si no agregarla con 'N/A'
         if 'Fiabilidad' not in df.columns:
             df = df.copy()
             df['Fiabilidad'] = 'N/A'
-        df_export = df[[
-            col for col in columns_to_export if col in df.columns]].copy()
+        df_export = df[[col for col in columns_to_export if col in df.columns]].copy()
+        
         df_export.to_excel(writer, index=False, sheet_name='Datos')
         resumen.to_excel(writer, index=False, sheet_name='Resumen')
 
@@ -60,21 +59,21 @@ def generate_excel_export(
             'font_color': 'black',
             'align': 'center'
         })
+
         # Aplicar formato a los encabezados de la hoja de datos
         for col_num, value in enumerate(df_export.columns.values):
             ws_datos.write(0, col_num, value, header_format)
+        
         # Aplicar formato a los encabezados de la hoja de resumen
         for col_num, value in enumerate(resumen.columns.values):
             ws_resumen.write(0, col_num, value, header_format)
-        # Gráfica 1: Anillo (Doughnut) - Distribución de comentarios por
-        # porcentaje
+
+        # Gráfica 1: Anillo (Doughnut) - Distribución de comentarios por porcentaje
         chart_ring = workbook.add_chart({'type': 'doughnut'})
         chart_ring.add_series({
             'name': 'Distribución de comentarios',
             'categories': ['Resumen', 1, 0, len(resumen), 0],
-            'values': ['Resumen', 1, 3, len(resumen), 3]
-            if 'Porcentaje' in resumen.columns
-            else ['Resumen', 1, 1, len(resumen), 1],
+            'values': ['Resumen', 1, 3, len(resumen), 3] if 'Porcentaje' in resumen.columns else ['Resumen', 1, 1, len(resumen), 1],
             'data_labels': {'percentage': True}
         })
         chart_ring.set_title({'name': 'Distribución de comentarios (%)'})
@@ -102,8 +101,7 @@ def generate_excel_export(
                 'values': ['Resumen', 1, 2, len(resumen), 2],
                 'data_labels': {'value': True}
             })
-            chart_bar2.set_title(
-                {'name': '¿Quiénes opinan más? (longitud promedio)'})
+            chart_bar2.set_title({'name': '¿Quiénes opinan más? (longitud promedio)'})
             chart_bar2.set_x_axis({'name': 'Clasificación'})
             chart_bar2.set_y_axis({'name': 'Longitud promedio'})
             ws_resumen.insert_chart('E38', chart_bar2)

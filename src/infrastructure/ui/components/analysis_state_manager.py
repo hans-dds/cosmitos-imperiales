@@ -25,9 +25,7 @@ class AnalysisStateManager:
             st.session_state.confirm_delete = False
 
     @staticmethod
-    def set_new_analysis(
-        analysis_name: str, analyzed_df: pd.DataFrame, file_id: str
-    ):
+    def set_new_analysis(analysis_name: str, analyzed_df: pd.DataFrame, file_id: str):
         """
         Establece un nuevo análisis como el actual.
 
@@ -95,8 +93,7 @@ class AnalysisStateManager:
         Determina si se necesita cargar un análisis.
 
         Args:
-            analysis_to_load: Nombre del análisis a cargar
-            (si hay uno explícito)
+            analysis_to_load: Nombre del análisis a cargar (si hay uno explícito)
 
         Returns:
             True si se necesita cargar un análisis, False en caso contrario
@@ -106,9 +103,7 @@ class AnalysisStateManager:
 
         if analysis_to_load:
             return True
-        elif selected_analysis and \
-                selected_analysis != st.session_state.get(
-                    'last_loaded_analysis'):
+        elif selected_analysis and selected_analysis != st.session_state.get('last_loaded_analysis'):
             if current_analysis_name != selected_analysis:
                 return True
         return False
@@ -134,3 +129,4 @@ class AnalysisStateManager:
         """Limpia el flag de archivo procesado para permitir reintentar."""
         if 'last_processed_file' in st.session_state:
             del st.session_state.last_processed_file
+

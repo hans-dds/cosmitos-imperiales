@@ -1,36 +1,40 @@
 services:
-  app:
-    build: .
-    container_name: cosmitos_app
-    restart: unless-stopped
-    ports:
-      - "8501:8501"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      DB_HOST: mysql
-      DB_DATABASE: cosmitos_imperiales_db
-      DB_USER: user
-      DB_PASSWORD: password
-  mysql:
-    image: mysql:8.0.39
-    container_name: cosmitos_mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: cosmitos_imperiales_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: rootpassword
-    ports:
-      - "3307:3306"
-    volumes:
-      - ./database_setup.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
+  mysql:
+
+    image: mysql:8.0.39
+
+    container_name: cosmitos_mysql
+
+    restart: unless-stopped
+
+    environment:
+
+      MYSQL_DATABASE: cosmitos_imperiales_db
+
+      MYSQL_USER: user
+
+      MYSQL_PASSWORD: password
+
+      MYSQL_ROOT_PASSWORD: rootpassword
+
+    ports:
+
+      - "3306:3306"
+
+    volumes:
+
+      - ./database_setup.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    healthcheck:
+
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+
+      interval: 10s
+
+      timeout: 5s
+
+      retries: 5
+
+      start_period: 30s
 

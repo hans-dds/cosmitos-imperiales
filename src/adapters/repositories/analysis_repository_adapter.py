@@ -9,9 +9,9 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 
 class SQLandCSVAnalysisRepository(IAnalysisRepository):
-    """Repositorio compuesto que persiste análisis en CSV y MySQL.
-
-    Encapsula detalles de cada medio y expone una interfaz agnóstica.
+    """
+    Una implementación concreta de IAnalysisRepository que guarda datos en
+    archivos MySQL y CSV.
     """
 
     def __init__(
@@ -24,81 +24,146 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         self._csv_base_dir = csv_base_dir
         os.makedirs(self._csv_base_dir, exist_ok=True)
 
-    def _save_csv(self, data: pd.DataFrame, analysis_id: str) -> Tuple[bool, str]:
+    def save_csv(self, data: pd.DataFrame, file_name: str) -> Tuple[bool, str]:
+        """Guarda los datos del análisis en un archivo CSV."""
         if data.empty:
             return False, "No se proporcionaron datos para guardar."
-        file_path = os.path.join(self._csv_base_dir, f"{analysis_id}_limpio.csv")
+
+        file_path = os.path.join(self._csv_base_dir, f"{file_name}_limpio.csv")
         try:
             data.to_csv(file_path, index=False, encoding='utf-8-sig')
-            return True, f"Datos guardados exitosamente en '{file_path}'."
+            msg = f"Datos guardados exitosamente en '{file_path}'."
+            return True, msg
         except Exception as e:
             return False, f"Fallo al guardar el archivo CSV. Razón: {e}"
 
-    def _save_mysql(self, data: pd.DataFrame, table_name: str) -> Tuple[bool, str]:
+    def save_mysql(
+            self,
+            data: pd.DataFrame,
+            table_name: str) -> Tuple[bool, str]:
+        """Guarda los datos del análisis en una tabla de MySQL."""
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
+                    # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
                     if not all(c.isalnum() or c == '_' for c in table_name):
-                        return False, f"Nombre de tabla inválido: {table_name}"
-                    self._ensure_table_exists(cursor, table_name)
+                        raise ValueError(f"Nombre de tabla inválido: {table_name}")
+                    
+                    # Esta es una creación de esquema simplificada
+                    # Usar backticks para escapar el nombre de la tabla
+                    cursor.execute(f"""
+                    CREATE TABLE IF NOT EXISTS `{table_name}` (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        comentarios TEXT,
+                        calificacion FLOAT,
+                        Clasificacion VARCHAR(255),
+                        Fiabilidad VARCHAR(255),
+                        fecha DATE NULL
+                    )""")
+
+                    # Construir la sentencia de inserción dinámicamente para
+                    # mantener compatibilidad con datos sin columna de fecha.
                     base_columns = ["comentarios", "calificacion", "Clasificacion", "Fiabilidad"]
                     insert_columns = list(base_columns)
                     has_fecha = 'fecha' in data.columns
                     if has_fecha:
                         insert_columns.append('fecha')
+                    
                     placeholders = ", ".join(["%s"] * len(insert_columns))
                     sql = (
-                        f"INSERT INTO `{table_name}` (" + ", ".join(insert_columns) + ") VALUES (" + placeholders + ")"
+                        f"INSERT INTO `{table_name}` "
+                        f"({', '.join(insert_columns)}) "
+                        f"VALUES ({placeholders})"
                     )
+
                     for _, row in data.iterrows():
+                        # Asegurar que Fiabilidad existe en el row
                         fiabilidad = row.get('Fiabilidad', 'N/A')
+                        # Convertir a string si es numérico
                         if isinstance(fiabilidad, (int, float)):
                             fiabilidad = str(fiabilidad)
-                        values = [row['comentarios'], row['calificacion'], row['Clasificacion'], fiabilidad]
+                        
+                        values = [
+                            row['comentarios'],
+                            row['calificacion'],
+                            row['Clasificacion'],
+                            fiabilidad,
+                        ]
+                        
                         if has_fecha:
+                            # Si la columna está en datetime, extraer solo la fecha;
+                            # si no, dejar que el conector intente convertirla.
                             fecha_val = row.get('fecha')
                             if pd.notna(fecha_val) and hasattr(fecha_val, 'date'):
                                 fecha_val = fecha_val.date()
                             elif pd.isna(fecha_val):
                                 fecha_val = None
                             else:
+                                # Intentar convertir si es string u otro tipo
                                 try:
                                     fecha_val = pd.to_datetime(fecha_val).date()
-                                except ValueError:
+                                except:
                                     fecha_val = None
                             values.append(fecha_val)
+                        
                         cursor.execute(sql, values)
                     conn.commit()
-            return True, f"Datos guardados exitosamente en la tabla MySQL '{table_name}'."
+            msg = f"Datos guardados exitosamente en la tabla MySQL '{table_name}'."
+            return True, msg
         except Error as e:
             return False, f"Error al conectar o guardar en MySQL: {e}"
 
-    def list(self) -> List[str]:
+    def list_analyses(self) -> List[str]:
+        """Lista las tablas de análisis guardadas de la base de datos."""
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
                     cursor.execute("SHOW TABLES LIKE 'analisis_%'")
                     return [row[0] for row in cursor.fetchall()]
-        except Error:
+        except Error as e:
+            print(f"Error al listar las tablas de análisis: {e}")
             return []
 
-    def load(self, analysis_id: str) -> pd.DataFrame:
+    def load_analysis(self, name: str) -> pd.DataFrame:
+        """
+        Carga un análisis específico de una tabla de MySQL.
+        Convierte valores numéricos de clasificación a texto si es necesario.
+        Agrega columna de Fiabilidad si no existe.
+        """
         try:
             with mysql.connector.connect(**self._db_config) as conn:
-                if not all(c.isalnum() or c == '_' for c in analysis_id):
-                    return pd.DataFrame()
-                query = f"SELECT * FROM `{analysis_id}`"
+                # Usar parámetros preparados para mayor seguridad
+                # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
+                if not all(c.isalnum() or c == '_' for c in name):
+                    raise ValueError(f"Nombre de tabla inválido: {name}")
+                
+                # Seleccionamos todas las columnas para permitir que columnas
+                # adicionales (como 'fecha') estén disponibles para la capa de UI.
+                query = f"SELECT * FROM `{name}`"
                 df = pd.read_sql(query, conn)
+                
+                # Usar el mapper para convertir clasificaciones
+                if not df.empty and 'Clasificacion' in df.columns:
+                    from use_cases.mappers.sentiment_mapper import convert_dataframe_classifications
+                    df = convert_dataframe_classifications(df)
+                
+                # Agregar Fiabilidad si no existe
+                if 'Fiabilidad' not in df.columns:
+                    df['Fiabilidad'] = 'N/A'
+                
                 return df
-        except Error:
+        except Error as e:
+            print(f"Error al cargar el análisis '{name}': {e}")
             return pd.DataFrame()
 
-    def delete(self, analysis_id: str) -> Tuple[bool, str]:
+    def delete_analysis(self, name: str) -> Tuple[bool, str]:
         """
         Elimina un análisis guardado de la base de datos MySQL.
         También intenta eliminar el archivo CSV asociado si existe.
+        
         Args:
             name: El nombre de la tabla/análisis a eliminar.
+            
         Returns:
             Tupla con (éxito, mensaje)
         """
@@ -106,19 +171,24 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             # Eliminar tabla de MySQL
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
-                    if not all(c.isalnum() or c == '_' for c in analysis_id):
-                        return False, f"Nombre de tabla inválido: {analysis_id}"
-                    cursor.execute(f"SHOW TABLES LIKE '{analysis_id}'")
+                    # Validar que el nombre de la tabla solo contiene caracteres alfanuméricos y guiones bajos
+                    if not all(c.isalnum() or c == '_' for c in name):
+                        return False, f"Nombre de tabla inválido: {name}"
+                    
+                    # Verificar que la tabla existe antes de intentar eliminarla
+                    cursor.execute(f"SHOW TABLES LIKE '{name}'")
                     if not cursor.fetchone():
-                        return False, f"El análisis '{analysis_id}' no existe en la base de datos."
-                    cursor.execute(f"DROP TABLE IF EXISTS `{analysis_id}`")
+                        return False, f"El análisis '{name}' no existe en la base de datos."
+                    
+                    # Eliminar la tabla usando backticks para escapar
+                    cursor.execute(f"DROP TABLE IF EXISTS `{name}`")
                     conn.commit()
+            
             # Intentar eliminar el archivo CSV asociado si existe
-            # El nombre del archivo CSV se deriva del nombre de la tabla
-            # (sin el prefijo 'analisis_')
-            csv_file_name = analysis_id.replace('analisis_', '') if analysis_id.startswith('analisis_') else analysis_id
-            csv_path = os.path.join(
-                self._csv_base_dir, f"{csv_file_name}_limpio.csv")
+            # El nombre del archivo CSV se deriva del nombre de la tabla (sin el prefijo 'analisis_')
+            csv_file_name = name.replace('analisis_', '') if name.startswith('analisis_') else name
+            csv_path = os.path.join(self._csv_base_dir, f"{csv_file_name}_limpio.csv")
+            
             csv_deleted = False
             if os.path.exists(csv_path):
                 try:
@@ -126,95 +196,37 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                     csv_deleted = True
                 except Exception as e:
                     # No es crítico si no se puede eliminar el CSV
-                    print("Advertencia: No se pudo eliminar el archivo CSV"
-                          f" '{csv_path}': {e}")
-            # Mensaje base de eliminación exitosa
-            msg = (f"Análisis '{analysis_id}' eliminado exitosamente de la base de datos.")
+                    print(f"Advertencia: No se pudo eliminar el archivo CSV '{csv_path}': {e}")
+            
+            msg = f"Análisis '{name}' eliminado exitosamente de la base de datos."
             if csv_deleted:
-                msg += " Archivo CSV también eliminado."
+                msg += f" Archivo CSV también eliminado."
+            
             return True, msg
+            
         except Error as e:
-            return False, f"Error al eliminar el análisis '{analysis_id}': {e}"
+            return False, f"Error al eliminar el análisis '{name}': {e}"
         except Exception as e:
-            return False, f"Error inesperado al eliminar el análisis '{analysis_id}': {e}"
+            return False, f"Error inesperado al eliminar el análisis '{name}': {e}"
 
-    def delete_many(self, analysis_ids: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
-        results: List[Tuple[str, bool, str]] = []
-        all_success = True
-        for aid in analysis_ids:
-            success, message = self.delete(aid)
-            results.append((aid, success, message))
-            if not success:
-                all_success = False
-        return all_success, results
-
-    def save(self, data: pd.DataFrame, analysis_id: str) -> Tuple[bool, str]:
-        table_name = f"analisis_{analysis_id}" if not analysis_id.startswith('analisis_') else analysis_id
-        ok_csv, msg_csv = self._save_csv(data, analysis_id)
-        ok_sql, msg_sql = self._save_mysql(data, table_name)
-        if ok_csv and ok_sql:
-            return True, "Persistencia realizada en CSV y MySQL."
-        if ok_csv and not ok_sql:
-            return False, f"CSV OK. MySQL fallo: {msg_sql}"
-        if ok_sql and not ok_csv:
-            return False, f"MySQL OK. CSV fallo: {msg_csv}"
-        return False, f"Fallos: CSV={msg_csv}; MySQL={msg_sql}"
-
-    def clone_with_modifications(
-        self, 
-        original_analysis_id: str, 
-        modified_data: pd.DataFrame, 
-        suffix: str
-    ) -> Tuple[bool, str, str]:
+    def delete_multiple_analyses(self, names: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
         """
-        Clona un análisis existente con datos modificados.
+        Elimina múltiples análisis guardados de la base de datos MySQL.
         
         Args:
-            original_analysis_id: ID del análisis original
-            modified_data: DataFrame con los datos modificados
-            suffix: Sufijo para el nuevo análisis (ej: '_modificacion_2024-12-01')
-        
+            names: Lista de nombres de análisis a eliminar.
+            
         Returns:
-            Tupla con (éxito, nuevo_analysis_id, mensaje)
+            Tupla con (éxito_general, lista_de_resultados)
+            donde cada resultado es (nombre, éxito, mensaje)
         """
-        # Validar que el análisis original existe
-        try:
-            with mysql.connector.connect(**self._db_config) as conn:
-                with conn.cursor() as cursor:
-                    # Validar nombre de tabla
-                    if not all(c.isalnum() or c == '_' for c in original_analysis_id):
-                        return False, "", f"Nombre de análisis inválido: {original_analysis_id}"
-                    
-                    # Verificar que la tabla original existe
-                    cursor.execute(f"SHOW TABLES LIKE '{original_analysis_id}'")
-                    if not cursor.fetchone():
-                        return False, "", f"El análisis original '{original_analysis_id}' no existe."
-        except Error as e:
-            return False, "", f"Error al verificar análisis original: {e}"
+        results = []
+        all_success = True
         
-        # Generar nuevo ID
-        # Si el analysis_id original ya tiene el prefijo 'analisis_', lo removemos temporalmente
-        base_id = original_analysis_id.replace('analisis_', '', 1) if original_analysis_id.startswith('analisis_') else original_analysis_id
-        new_analysis_id = f"{base_id}{suffix}"
+        for name in names:
+            success, message = self.delete_analysis(name)
+            results.append((name, success, message))
+            if not success:
+                all_success = False
         
-        # Guardar el nuevo análisis usando el método save existente
-        success, message = self.save(modified_data, new_analysis_id)
-        
-        if success:
-            # Construir el ID completo con prefijo si es necesario
-            full_new_id = f"analisis_{new_analysis_id}" if not new_analysis_id.startswith('analisis_') else new_analysis_id
-            return True, full_new_id, f"Análisis clonado exitosamente como '{full_new_id}'."
-        else:
-            return False, "", f"Error al guardar el análisis clonado: {message}"
-
-    def _ensure_table_exists(self, cursor, table_name: str) -> None:
-        cursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS `{table_name}` (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            comentarios TEXT,
-            calificacion FLOAT,
-            Clasificacion VARCHAR(255),
-            Fiabilidad VARCHAR(255),
-            fecha DATE NULL
-        )""")
-
+        return all_success, results

@@ -40,18 +40,12 @@ class ChartsComponent:
         Returns:
             True si el DataFrame es válido, False en caso contrario
         """
-        if 'Clasificacion' not in df.columns or \
-                'comentarios' not in df.columns:
-            st.error(
-                "El DataFrame no tiene las columnas requeridas para los"
-                " gráficos.")
+        if 'Clasificacion' not in df.columns or 'comentarios' not in df.columns:
+            st.error("El DataFrame no tiene las columnas requeridas para los gráficos.")
             return False
         return True
 
-    def _render_distribution_charts(
-            self,
-            df: pd.DataFrame,
-            color_map: Dict[str, str]):
+    def _render_distribution_charts(self, df: pd.DataFrame, color_map: Dict[str, str]):
         """
         Renderiza los gráficos de distribución (pie y bar).
 
@@ -70,10 +64,7 @@ class ChartsComponent:
         with col2:
             self._render_bar_chart(counts, color_map)
 
-    def _render_pie_chart(
-            self,
-            counts: pd.DataFrame,
-            color_map: Dict[str, str]):
+    def _render_pie_chart(self, counts: pd.DataFrame, color_map: Dict[str, str]):
         """
         Renderiza el gráfico de pastel.
 
@@ -92,10 +83,7 @@ class ChartsComponent:
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
-    def _render_bar_chart(
-            self,
-            counts: pd.DataFrame,
-            color_map: Dict[str, str]):
+    def _render_bar_chart(self, counts: pd.DataFrame, color_map: Dict[str, str]):
         """
         Renderiza el gráfico de barras.
 
@@ -140,3 +128,4 @@ class ChartsComponent:
         )
         fig_hist.update_layout(margin=dict(t=30, b=30, l=10, r=10))
         st.plotly_chart(fig_hist, use_container_width=True)
+

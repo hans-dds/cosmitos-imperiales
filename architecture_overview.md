@@ -174,24 +174,19 @@ La capa de casos de uso contiene la **lógica de aplicación** que orquesta las 
 ```
 src/use_cases/
 ├── ports/                    # Interfaces (Puertos) - Abstracciones
-│   ├── analysis_repository.py        # IAnalysisRepository
-│   ├── data_cleaner.py               # IDataCleaner
-│   ├── file_reader.py                # IFileReader
-│   ├── sentiment_analyzer.py         # ISentimentAnalyzer
-│   └── report_repository.py          # IReportRepository
+│   ├── analysis_repository.py    # IAnalysisRepository
+│   ├── data_cleaner.py           # IDataCleaner
+│   ├── file_reader.py            # IFileReader
+│   └── sentiment_analyzer.py     # ISentimentAnalyzer
 ├── mappers/                  # Mappers - Conversión entre representaciones
 │   └── sentiment_mapper.py   # Convierte numéricos a Sentiment
-├── process_file_use_case.py               # Procesar archivo completo
-├── read_file_use_case.py                 # Leer archivo
-├── load_analysis_use_case.py             # Cargar análisis guardado
-├── list_analyses_use_case.py            # Listar análisis guardados
-├── delete_analysis_use_case.py          # Eliminar análisis
+├── process_file_use_case.py   # Procesar archivo completo
+├── read_file_use_case.py     # Leer archivo
+├── load_analysis_use_case.py # Cargar análisis guardado
+├── list_analyses_use_case.py # Listar análisis guardados
+├── delete_analysis_use_case.py # Eliminar análisis
 ├── prepare_analysis_display_use_case.py # Preparar para visualización
-├── generate_summary_use_case.py         # Generar resumen
-├── save_report_use_case.py              # Guardar metadatos de reporte
-├── list_reports_use_case.py             # Listar historial de reportes
-├── clear_reports_history_use_case.py    # Limpiar historial de reportes
-└── delete_report_use_case.py            # Eliminar un reporte del historial
+└── generate_summary_use_case.py # Generar resumen
 ```
 
 ### Puertos (Interfaces)
@@ -235,19 +230,6 @@ src/use_cases/
 - `analyze(data: pd.DataFrame) -> pd.DataFrame`
 
 **Propósito**: Define cómo se analiza el sentimiento.
-
-#### `ports/report_repository.py`
-
-**Interfaz**: `IReportRepository`
-
-**Métodos**:
-- `save(analysis_name, report_format, file_path, ...) -> Tuple[bool, str]`
-- `list() -> List[dict]`
-- `get(report_id: int) -> Optional[dict]`
-- `delete(report_id: int) -> Tuple[bool, str]`
-- `clear() -> Tuple[bool, str]`
-
-**Propósito**: Gestiona el historial de reportes (metadatos y vínculo a archivo).
 
 ### Casos de Uso
 
@@ -321,42 +303,6 @@ src/use_cases/
 **Dependencias**:
 - Servicios de dominio (`metrics_calculator`)
 
-#### `save_report_use_case.py`
-
-**Clase**: `SaveReportUseCase`
-
-**Propósito**: Persiste metadatos de un reporte generado (ruta, formato, análisis).
-
-**Dependencias**:
-- `IReportRepository`
-
-#### `list_reports_use_case.py`
-
-**Clase**: `ListReportsUseCase`
-
-**Propósito**: Lista el historial de reportes con sus metadatos.
-
-**Dependencias**:
-- `IReportRepository`
-
-#### `clear_reports_history_use_case.py`
-
-**Clase**: `ClearReportsHistoryUseCase`
-
-**Propósito**: Limpia el historial y elimina archivos asociados.
-
-**Dependencias**:
-- `IReportRepository`
-
-#### `delete_report_use_case.py`
-
-**Clase**: `DeleteReportUseCase`
-
-**Propósito**: Elimina un reporte específico por id (solo su fila y archivo).
-
-**Dependencias**:
-- `IReportRepository`
-
 ### Mappers
 
 #### `mappers/sentiment_mapper.py`
@@ -386,8 +332,7 @@ src/adapters/
 ├── file_readers/
 │   └── file_reader_adapter.py      # PandasFileReader (IFileReader)
 └── repositories/
-    ├── analysis_repository_adapter.py  # SQLandCSVAnalysisRepository (IAnalysisRepository)
-    └── report_repository_adapter.py    # SQLReportRepository (IReportRepository)
+    └── analysis_repository_adapter.py  # SQLandCSVAnalysisRepository (IAnalysisRepository)
 ```
 
 ### Adaptadores
@@ -449,20 +394,6 @@ src/adapters/
 - Lista tablas de análisis
 - Elimina análisis (tablas y archivos CSV)
 
-#### `repositories/report_repository_adapter.py`
-
-**Clase**: `SQLReportRepository`
-
-**Implementa**: `IReportRepository`
-
-**Propósito**: Gestiona el historial de reportes en MySQL y la vida de archivos en disco.
-
-**Características**:
-- `save` inserta metadatos con `created_at`.
-- `list` devuelve filas ordenadas por `created_at DESC`.
-- `delete` elimina un único reporte por `id` y su archivo asociado.
-- `clear` borra todos los archivos listados y trunca la tabla.
-
 ---
 
 ## Capa de Infraestructura
@@ -489,7 +420,6 @@ src/infrastructure/
     │   ├── charts_component.py
     │   ├── delete_analysis_component.py
     │   ├── export_component.py
-    │   ├── report_history_component.py
     │   ├── file_upload_component.py
     │   ├── main_content.py
     │   ├── sidebar_component.py
@@ -546,11 +476,6 @@ src/infrastructure/
 - `handle_delete_analysis()`: Elimina análisis
 - `prepare_analysis_display()`: Prepara datos para visualización
 - `_handle_load_all_analyses()`: Carga y consolida todos los análisis
- - `handle_send_email()`: Envía reporte por correo
- - `handle_save_report()`: Guarda reporte en historial
- - `get_report_history()`: Lista historial de reportes
- - `clear_report_history()`: Limpia historial
- - `delete_report(report_id)`: Elimina un reporte específico
 
 #### `ui/components/`
 
@@ -563,7 +488,6 @@ src/infrastructure/
 - `TableComponent`: Tabla de comentarios
 - `WordCloudComponent`: Nube de palabras
 - `ExportComponent`: Botones de exportación
- - `ReportHistoryComponent`: Historial con descarga y eliminación por fila
 - `FileUploadComponent`: Carga de archivos
 - `DeleteAnalysisComponent`: Eliminación de análisis
 - `AnalysisStateManager`: Gestión de estado de Streamlit

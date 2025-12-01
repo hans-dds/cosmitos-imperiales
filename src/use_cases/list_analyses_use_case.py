@@ -4,8 +4,7 @@ from use_cases.ports.analysis_repository import IAnalysisRepository
 
 class ListAnalysesUseCase:
     """
-    Este caso de uso recupera la lista de todos los análisis guardados
-    previamente.
+    Este caso de uso recupera la lista de todos los análisis guardados previamente.
     """
 
     def __init__(self, analysis_repository: IAnalysisRepository):
@@ -18,4 +17,4 @@ class ListAnalysesUseCase:
         Returns:
             Una lista de nombres de los análisis guardados.
         """
-        return self._analysis_repository.list()
+        return self._analysis_repository.list_analyses()
