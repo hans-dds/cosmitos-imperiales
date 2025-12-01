@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 from typing import Optional, Tuple, List, Dict
 
 from use_cases.process_file_use_case import ProcessFileUseCase
@@ -6,9 +7,9 @@ from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
-from use_cases.prepare_analysis_display_use_case import \
-    PrepareAnalysisDisplayUseCase
+from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
+from use_cases.generate_suggestions_use_case import GenerateSuggestionsUseCase
 
 
 class StreamlitController:
@@ -25,14 +26,15 @@ class StreamlitController:
         list_analyses_use_case: ListAnalysesUseCase,
         delete_analysis_use_case: DeleteAnalysisUseCase,
         prepare_analysis_display_use_case: PrepareAnalysisDisplayUseCase,
+        generate_suggestions_use_case: GenerateSuggestionsUseCase
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
         self._load_analysis_use_case = load_analysis_use_case
         self._list_analyses_use_case = list_analyses_use_case
         self._delete_analysis_use_case = delete_analysis_use_case
-        self._prepare_analysis_display_use_case = \
-            prepare_analysis_display_use_case
+        self._prepare_analysis_display_use_case = prepare_analysis_display_use_case
+        self._generate_suggestions_use_case = generate_suggestions_use_case
 
     def handle_file_upload(
         self,
@@ -75,19 +77,20 @@ class StreamlitController:
     ) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Maneja la carga de un análisis guardado.
+
         Args:
             analysis_name: El nombre del análisis a cargar.
+
         Returns:
             Tupla con (éxito, DataFrame cargado, mensaje de error)
         """
         try:
             if analysis_name == ALL_ANALYSES_OPTION:
                 return self._handle_load_all_analyses()
+            
             loaded_df = self._load_analysis_use_case.execute(analysis_name)
             if loaded_df.empty:
-                return (False, None,
-                        f"No se encontraron datos para el análisis "
-                        f"'{analysis_name}'.")
+                return False, None, f"No se encontraron datos para el análisis '{analysis_name}'."
             return True, loaded_df, None
         except Exception as e:
             return False, None, f"Error al cargar el análisis: {str(e)}"
@@ -95,6 +98,7 @@ class StreamlitController:
     def get_saved_analyses(self) -> List[str]:
         """
         Obtiene la lista de análisis guardados.
+
         Returns:
             Lista de nombres de análisis guardados.
         """
@@ -106,8 +110,10 @@ class StreamlitController:
     ) -> Tuple[bool, str]:
         """
         Maneja la eliminación de un análisis.
+
         Args:
             analysis_name: El nombre del análisis a eliminar.
+
         Returns:
             Tupla con (éxito, mensaje)
         """
@@ -119,39 +125,42 @@ class StreamlitController:
     ) -> Tuple[bool, List[Tuple[str, bool, str]]]:
         """
         Maneja la eliminación de múltiples análisis.
+
         Args:
             analysis_names: Lista de nombres de análisis a eliminar.
+
         Returns:
             Tupla con (éxito general, lista de resultados individuales)
         """
-        return self._delete_analysis_use_case.execute_multiple(
-            analysis_names)
-
+        return self._delete_analysis_use_case.execute_multiple(analysis_names)
+    
     def prepare_analysis_display(
         self,
         df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Prepara un DataFrame para visualización.
+        
         Args:
             df: DataFrame con los datos del análisis
+            
         Returns:
             Tupla con (DataFrame preparado, mapa de colores)
         """
         return self._prepare_analysis_display_use_case.execute(df)
-
-    def _handle_load_all_analyses(
-            self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
+    
+    def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Carga y consolida todos los análisis guardados en la base de datos.
+        
         Returns:
             Tupla con (éxito, DataFrame consolidado, mensaje de error)
         """
         try:
             analysis_names = self._list_analyses_use_case.execute()
             if not analysis_names:
-                return (False, None,
-                        "No hay análisis guardados para consolidar.")
+                return False, None, "No hay análisis guardados para consolidar."
+            
             dataframes = []
             for name in analysis_names:
                 df = self._load_analysis_use_case.execute(name)
@@ -160,10 +169,17 @@ class StreamlitController:
                 df = df.copy()
                 df['analysis_name'] = name
                 dataframes.append(df)
+            
             if not dataframes:
-                return (False, None,
-                        "No se encontraron datos en los análisis guardados.")
+                return False, None, "No se encontraron datos en los análisis guardados."
+            
             combined_df = pd.concat(dataframes, ignore_index=True)
             return True, combined_df, None
         except Exception as e:
             return False, None, f"Error al consolidar los análisis: {str(e)}"
+        
+    def get_suggestions_component(self):
+        """Retorna una instancia configurada del componente de sugerencias."""
+        from infrastructure.ui.components.suggestions_component import SuggestionsComponent
+        return SuggestionsComponent(self._generate_suggestions_use_case)
+
