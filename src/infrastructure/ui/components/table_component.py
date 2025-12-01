@@ -166,3 +166,101 @@ class TableComponent:
             use_container_width=True,
             hide_index=True
         )
+
+    def render_editable(self, df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
+        """
+        Renderiza la tabla con capacidad de edición de etiquetas y detecta cambios.
+
+        Args:
+            df: DataFrame con los datos a mostrar
+
+        Returns:
+            Tupla con (DataFrame editado, hay_cambios_pendientes)
+        """
+        if not self._validate_columns(df):
+            return df, False
+
+        st.subheader("Comentarios Filtrados")
+
+        # Crear copia con las columnas a mostrar
+        columns_to_display = [
+            col for col in self.DISPLAY_COLUMNS
+            if col in df.columns
+        ]
+        display_df = df[columns_to_display].copy()
+
+        # Aplicar filtros
+        display_df = self._apply_filters(display_df)
+
+        # Renderizar tabla editable
+        edited_df, has_changes = self._render_editable_table(display_df)
+
+        return edited_df, has_changes
+
+    def _render_editable_table(self, df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
+        """
+        Renderiza la tabla editable con dropdown para clasificación.
+
+        Args:
+            df: DataFrame a mostrar y editar
+
+        Returns:
+            Tupla con (DataFrame editado, hay_cambios_pendientes)
+        """
+        # Control de cantidad de comentarios
+        max_comments = max(10, len(df))
+        number_of_comments = st.slider(
+            "Número de comentarios a mostrar",
+            min_value=10,
+            max_value=max_comments,
+            value=min(10, max_comments)
+        )
+        st.session_state["comments_filter_count"] = int(number_of_comments)
+
+        # Preparar DataFrame para edición
+        df_to_edit = df.head(number_of_comments).copy()
+
+        # Preparar nombres de columnas para mostrar
+        column_mapping = {
+            'calificacion': 'Calificación',
+            'comentarios': 'Comentario',
+            'Clasificacion': 'Clasificación',
+            'Fiabilidad': 'Fiabilidad'
+        }
+
+        # Renombrar columnas para mostrar
+        df_renamed = df_to_edit.rename(columns=column_mapping)
+
+        # Guardar estado original si no existe
+        if 'original_df_for_edit' not in st.session_state:
+            st.session_state['original_df_for_edit'] = df_renamed.copy()
+
+        # Configurar columna editable con dropdown
+        column_config = {
+            'Clasificación': st.column_config.SelectboxColumn(
+                'Clasificación',
+                help='Selecciona la clasificación correcta',
+                options=['Detractor', 'Neutro', 'Promotor'],
+                required=True
+            )
+        }
+
+        # Renderizar tabla editable
+        edited_df = st.data_editor(
+            df_renamed,
+            use_container_width=True,
+            hide_index=True,
+            column_config=column_config,
+            disabled=['Calificación', 'Comentario', 'Fiabilidad'],
+            key='editable_comments_table'
+        )
+
+        # Detectar cambios comparando con el original
+        has_changes = False
+        if 'Clasificación' in edited_df.columns and 'Clasificación' in st.session_state['original_df_for_edit'].columns:
+            original_classifications = st.session_state['original_df_for_edit']['Clasificación'].values
+            current_classifications = edited_df['Clasificación'].values
+            has_changes = not (original_classifications == current_classifications).all()
+
+        return edited_df, has_changes
+

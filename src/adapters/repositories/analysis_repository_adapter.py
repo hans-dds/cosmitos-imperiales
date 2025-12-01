@@ -160,6 +160,53 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             return False, f"MySQL OK. CSV fallo: {msg_csv}"
         return False, f"Fallos: CSV={msg_csv}; MySQL={msg_sql}"
 
+    def clone_with_modifications(
+        self, 
+        original_analysis_id: str, 
+        modified_data: pd.DataFrame, 
+        suffix: str
+    ) -> Tuple[bool, str, str]:
+        """
+        Clona un análisis existente con datos modificados.
+        
+        Args:
+            original_analysis_id: ID del análisis original
+            modified_data: DataFrame con los datos modificados
+            suffix: Sufijo para el nuevo análisis (ej: '_modificacion_2024-12-01')
+        
+        Returns:
+            Tupla con (éxito, nuevo_analysis_id, mensaje)
+        """
+        # Validar que el análisis original existe
+        try:
+            with mysql.connector.connect(**self._db_config) as conn:
+                with conn.cursor() as cursor:
+                    # Validar nombre de tabla
+                    if not all(c.isalnum() or c == '_' for c in original_analysis_id):
+                        return False, "", f"Nombre de análisis inválido: {original_analysis_id}"
+                    
+                    # Verificar que la tabla original existe
+                    cursor.execute(f"SHOW TABLES LIKE '{original_analysis_id}'")
+                    if not cursor.fetchone():
+                        return False, "", f"El análisis original '{original_analysis_id}' no existe."
+        except Error as e:
+            return False, "", f"Error al verificar análisis original: {e}"
+        
+        # Generar nuevo ID
+        # Si el analysis_id original ya tiene el prefijo 'analisis_', lo removemos temporalmente
+        base_id = original_analysis_id.replace('analisis_', '', 1) if original_analysis_id.startswith('analisis_') else original_analysis_id
+        new_analysis_id = f"{base_id}{suffix}"
+        
+        # Guardar el nuevo análisis usando el método save existente
+        success, message = self.save(modified_data, new_analysis_id)
+        
+        if success:
+            # Construir el ID completo con prefijo si es necesario
+            full_new_id = f"analisis_{new_analysis_id}" if not new_analysis_id.startswith('analisis_') else new_analysis_id
+            return True, full_new_id, f"Análisis clonado exitosamente como '{full_new_id}'."
+        else:
+            return False, "", f"Error al guardar el análisis clonado: {message}"
+
     def _ensure_table_exists(self, cursor, table_name: str) -> None:
         cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS `{table_name}` (

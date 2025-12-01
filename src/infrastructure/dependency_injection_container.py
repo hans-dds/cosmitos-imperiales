@@ -16,6 +16,7 @@ from use_cases.save_report_use_case import SaveReportUseCase
 from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
 from use_cases.delete_report_use_case import DeleteReportUseCase
+from use_cases.update_sentiment_use_case import UpdateSentimentUseCase
 from adapters.repositories.report_repository_adapter import SQLReportRepository
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
@@ -160,6 +161,14 @@ class Container:
         return DeleteReportUseCase(report_repository=self._report_repository)
 
     @property
+    def update_sentiment_use_case(self) -> UpdateSentimentUseCase:
+        """
+        Crea y devuelve una instancia de UpdateSentimentUseCase.
+        """
+        return UpdateSentimentUseCase(
+            analysis_repository=self._analysis_repository)
+
+    @property
     def streamlit_controller(self) -> StreamlitController:
         """
         Crea y devuelve una instancia de StreamlitController con todas las
@@ -177,6 +186,7 @@ class Container:
             list_reports_use_case=self.list_reports_use_case,
             clear_reports_history_use_case=self.clear_reports_history_use_case,
             delete_report_use_case=self.delete_report_use_case,
+            update_sentiment_use_case=self.update_sentiment_use_case,
         )
 
 
