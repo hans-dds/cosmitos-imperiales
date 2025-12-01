@@ -59,7 +59,16 @@ class ExportComponent:
 
             with col_pdf:
                 try:
-                    pdf_bytes = generate_pdf_export(df, color_map)
+                    # Construir selección de comentarios acorde a la UI
+                    comments_df = df
+                    sel_cat = st.session_state.get("comments_filter_category")
+                    if sel_cat and sel_cat != "Todas" and "Clasificacion" in comments_df.columns:
+                        comments_df = comments_df[comments_df["Clasificacion"] == sel_cat]
+                    sel_count = st.session_state.get("comments_filter_count")
+                    if isinstance(sel_count, int) and sel_count > 0:
+                        comments_df = comments_df.head(sel_count)
+
+                    pdf_bytes = generate_pdf_export(df, color_map, comments_df=comments_df)
                 except ValueError as error:
                     st.info(f"PDF no disponible: {error}")
                 else:

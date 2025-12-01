@@ -79,6 +79,8 @@ class TableComponent:
             df['Clasificacion'].dropna().unique().tolist()
         )
         selected_category = st.selectbox("Filtrar por categoría", categories)
+        # Persistir selección para sincronizar con exportación a PDF
+        st.session_state["comments_filter_category"] = selected_category
 
         if selected_category != 'Todas':
             df = df[df['Clasificacion'] == selected_category]
@@ -100,6 +102,8 @@ class TableComponent:
             max_value=max_comments,
             value=min(10, max_comments)
         )
+        # Persistir cantidad seleccionada para exportación a PDF
+        st.session_state["comments_filter_count"] = int(number_of_comments)
         # Preparar nombres de columnas para mostrar
         column_mapping = {
             'calificacion': 'Calificación',
