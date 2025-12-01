@@ -6,9 +6,14 @@ from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
-from use_cases.prepare_analysis_display_use_case import \
-    PrepareAnalysisDisplayUseCase
+from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from use_cases.send_results_email_use_case import SendResultsEmailUseCase
+from use_cases.save_report_use_case import SaveReportUseCase
+from use_cases.list_reports_use_case import ListReportsUseCase
+from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
+from use_cases.delete_report_use_case import DeleteReportUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
+import os
 
 
 class StreamlitController:
@@ -25,14 +30,23 @@ class StreamlitController:
         list_analyses_use_case: ListAnalysesUseCase,
         delete_analysis_use_case: DeleteAnalysisUseCase,
         prepare_analysis_display_use_case: PrepareAnalysisDisplayUseCase,
+        send_results_email_use_case: SendResultsEmailUseCase,
+        save_report_use_case: SaveReportUseCase,
+        list_reports_use_case: ListReportsUseCase,
+        clear_reports_history_use_case: ClearReportsHistoryUseCase,
+        delete_report_use_case: DeleteReportUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
         self._load_analysis_use_case = load_analysis_use_case
         self._list_analyses_use_case = list_analyses_use_case
         self._delete_analysis_use_case = delete_analysis_use_case
-        self._prepare_analysis_display_use_case = \
-            prepare_analysis_display_use_case
+        self._prepare_analysis_display_use_case = prepare_analysis_display_use_case
+        self._send_results_email_use_case = send_results_email_use_case
+        self._save_report_use_case = save_report_use_case
+        self._list_reports_use_case = list_reports_use_case
+        self._clear_reports_history_use_case = clear_reports_history_use_case
+        self._delete_report_use_case = delete_report_use_case
 
     def handle_file_upload(
         self,
@@ -139,9 +153,78 @@ class StreamlitController:
             Tupla con (DataFrame preparado, mapa de colores)
         """
         return self._prepare_analysis_display_use_case.execute(df)
+    
+    def handle_send_email(
+        self,
+        to_emails: List[str],
+        analysis_name: str,
+        df: pd.DataFrame,
+        attachment_type: str = 'excel',
+        color_map: Dict[str, str] = None,
+        comments_df: pd.DataFrame | None = None,
+    ) -> Tuple[bool, str]:
+        """
+        Maneja el envío de resultados por correo electrónico.
 
-    def _handle_load_all_analyses(
-            self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
+        Args:
+            to_emails: Lista de correos destinatarios.
+            analysis_name: Nombre del análisis.
+            df: DataFrame con los datos del análisis.
+            attachment_type: Tipo de adjunto ('excel' o 'pdf').
+            color_map: Mapa de colores (necesario para PDF).
+
+        Returns:
+            Tupla con (éxito, mensaje)
+        """
+        return self._send_results_email_use_case.execute(
+            to_emails=to_emails,
+            analysis_name=analysis_name,
+            df=df,
+            attachment_type=attachment_type,
+            color_map=color_map,
+            comments_df=comments_df,
+        )
+
+    def handle_save_report(
+        self,
+        analysis_name: str,
+        df: pd.DataFrame,
+        report_format: str = 'pdf',
+        color_map: Dict[str, str] = None
+    ) -> Tuple[bool, str, str]:
+        """Genera y guarda un reporte en historial."""
+        return self._save_report_use_case.execute(analysis_name, df, report_format, color_map)
+
+    def get_report_history(self) -> List[dict]:
+        """Obtiene historial de reportes guardados."""
+        return self._list_reports_use_case.execute()
+
+    def clear_report_history(self) -> Tuple[bool, str]:
+        """Limpia el historial de reportes."""
+        return self._clear_reports_history_use_case.execute()
+
+    def delete_report(self, report_id: int) -> Tuple[bool, str]:
+        """Elimina un reporte específico del historial."""
+        return self._delete_report_use_case.execute(report_id)
+
+    def get_report_bytes(self, file_path: str) -> Tuple[bool, Optional[bytes]]:
+        """Lee y devuelve el contenido del archivo de reporte.
+
+        Args:
+            file_path: Ruta absoluta al archivo del reporte.
+
+        Returns:
+            Tupla (ok, bytes) donde ok indica éxito y bytes el contenido.
+        """
+        try:
+            if not file_path or not os.path.exists(file_path):
+                return False, None
+            with open(file_path, 'rb') as f:
+                return True, f.read()
+        except Exception:
+            return False, None
+
+    def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Carga y consolida todos los análisis guardados en la base de datos.
         Returns:

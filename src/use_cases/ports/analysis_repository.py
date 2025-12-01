@@ -3,94 +3,39 @@ import pandas as pd
 from typing import List, Tuple
 
 
+from abc import ABC, abstractmethod
+from typing import List, Tuple
+import pandas as pd
+
+
 class IAnalysisRepository(ABC):
+    """Puerto simplificado para la persistencia de análisis.
+
+    Agnóstico del medio de almacenamiento: la implementación puede guardar
+    en múltiples destinos (SQL, CSV, etc.) sin exponer métodos específicos.
     """
-    Puerto (Interfaz) para un repositorio que maneja la persistencia
-    de los resultados del análisis.
-    """
 
     @abstractmethod
-    def save_csv(self, data: pd.DataFrame, file_name: str) -> Tuple[bool, str]:
-        """
-        Guarda los datos del análisis en un archivo CSV.
-
-        Args:
-            data: El DataFrame a guardar.
-            file_name: El nombre base para el archivo de salida.
-
-        Returns:
-            Una tupla que contiene un indicador de éxito y un mensaje.
-        """
-        pass
+    def save(self, data: pd.DataFrame, analysis_id: str) -> Tuple[bool, str]:
+        """Persiste un análisis identificado por `analysis_id`."""
+        raise NotImplementedError
 
     @abstractmethod
-    def save_mysql(self,
-                   data: pd.DataFrame,
-                   table_name: str) -> Tuple[bool, str]:
-        """
-        Guarda los datos del análisis en una tabla de MySQL.
-
-        Args:
-            data: El DataFrame a guardar.
-            table_name: El nombre de la tabla donde se guardarán los datos.
-
-        Returns:
-            Una tupla que contiene un indicador de éxito y un mensaje.
-        """
-        pass
+    def list(self) -> List[str]:
+        """Lista identificadores de análisis disponibles."""
+        raise NotImplementedError
 
     @abstractmethod
-    def list_analyses(self) -> List[str]:
-        """
-        Lista los nombres de los análisis guardados previamente
-        (ej. tablas en la BD).
-
-        Returns:
-            Una lista de nombres de análisis.
-        """
-        pass
+    def load(self, analysis_id: str) -> pd.DataFrame:
+        """Recupera un análisis por su identificador."""
+        raise NotImplementedError
 
     @abstractmethod
-    def load_analysis(self, name: str) -> pd.DataFrame:
-        """
-        Carga un análisis específico por su nombre.
-
-        Args:
-            name: El nombre del análisis a cargar.
-
-        Returns:
-            Un DataFrame que contiene los datos del análisis.
-        """
-        pass
+    def delete(self, analysis_id: str) -> Tuple[bool, str]:
+        """Elimina un análisis por su identificador."""
+        raise NotImplementedError
 
     @abstractmethod
-    def delete_analysis(self, name: str) -> Tuple[bool, str]:
-        """
-        Elimina un análisis guardado por su nombre.
-
-        Args:
-            name: El nombre del análisis a eliminar.
-
-        Returns:
-            Una tupla que contiene un indicador de éxito y un mensaje.
-        """
-        pass
-
-    @abstractmethod
-    def delete_multiple_analyses(
-            self,
-            names: List[str]) -> Tuple[bool,
-                                       List[Tuple[str,
-                                                  bool,
-                                                  str]]]:
-        """
-        Elimina múltiples análisis guardados por sus nombres.
-
-        Args:
-            names: Lista de nombres de análisis a eliminar.
-
-        Returns:
-            Una tupla que contiene un indicador de éxito general y una lista de
-            tuplas con (nombre, éxito, mensaje) para cada análisis.
-        """
-        pass
+    def delete_many(self, analysis_ids: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+        """Elimina múltiples análisis y retorna resultados individuales."""
+        raise NotImplementedError

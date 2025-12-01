@@ -20,7 +20,7 @@ class DeleteAnalysisUseCase:
         Returns:
             Una tupla que contiene un indicador de éxito y un mensaje.
         """
-        return self._analysis_repository.delete_analysis(analysis_name)
+        return self._analysis_repository.delete(analysis_name)
 
     def execute_multiple(
             self,
@@ -39,5 +39,4 @@ class DeleteAnalysisUseCase:
             resultados individuales (nombre, éxito,
                                      mensaje).
         """
-        return self._analysis_repository.delete_multiple_analyses(
-            analysis_names)
+        return self._analysis_repository.delete_many(analysis_names)
