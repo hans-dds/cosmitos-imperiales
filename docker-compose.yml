@@ -27,10 +27,8 @@ services:
     volumes:
       - ./database_setup.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-
-

@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from typing import Optional
 from pandas.tseries.offsets import DateOffset
+from logging import getLogger
 
 from infrastructure.ui.controllers.streamlit_controller import \
     StreamlitController
@@ -34,6 +35,8 @@ class MainContent:
         self._table = TableComponent()
         self._export = ExportComponent(controller)
         self._word_cloud = WordCloudComponent()
+        self.logger = getLogger(__name__)
+        self.logger.setLevel('INFO')
 
     def render(
         self,
@@ -130,12 +133,13 @@ class MainContent:
             df_to_show)
         # Aplicar filtros de rango de fechas (por mes/año) antes de renderizar
         df_filtered = self._apply_monthly_date_filter(df_prepared)
+        self.logger.info(f"DataFrame filtrado: {df_filtered}")
         # Renderizar componentes
         self._charts.render(df_filtered, color_map)
         self._word_cloud.render(df_filtered)
         self._table.render(df_filtered)
         self._export.render(df_filtered, analysis_name, color_map)
-    
+
     def _apply_monthly_date_filter(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica un filtro de fechas por mes/año al DataFrame según la

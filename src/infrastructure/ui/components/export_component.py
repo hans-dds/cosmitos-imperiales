@@ -23,7 +23,8 @@ class ExportComponent:
         Args:
             df: DataFrame con los datos a exportar
             analysis_name: Nombre del análisis
-            color_map: Mapa de colores usado por las visualizaciones principales
+            color_map: Mapa de colores usado
+                por las visualizaciones principales
         """
         st.subheader("Exportar y Compartir")
 
