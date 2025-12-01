@@ -12,6 +12,7 @@ from use_cases.save_report_use_case import SaveReportUseCase
 from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
 from use_cases.delete_report_use_case import DeleteReportUseCase
+from use_cases.update_sentiment_use_case import UpdateSentimentUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 import os
 
@@ -35,6 +36,7 @@ class StreamlitController:
         list_reports_use_case: ListReportsUseCase,
         clear_reports_history_use_case: ClearReportsHistoryUseCase,
         delete_report_use_case: DeleteReportUseCase,
+        update_sentiment_use_case: UpdateSentimentUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
@@ -47,6 +49,7 @@ class StreamlitController:
         self._list_reports_use_case = list_reports_use_case
         self._clear_reports_history_use_case = clear_reports_history_use_case
         self._delete_report_use_case = delete_report_use_case
+        self._update_sentiment_use_case = update_sentiment_use_case
 
     def handle_file_upload(
         self,
@@ -223,6 +226,32 @@ class StreamlitController:
                 return True, f.read()
         except Exception:
             return False, None
+
+    def handle_update_sentiment(
+        self,
+        analysis_name: str,
+        df: pd.DataFrame,
+        modifications: List[Tuple[int, str]]
+    ) -> Tuple[bool, str, str]:
+        """
+        Maneja la actualización de etiquetas de sentimiento.
+        
+        Args:
+            analysis_name: Nombre del análisis original
+            df: DataFrame con los datos completos
+            modifications: Lista de tuplas (índice, nueva_etiqueta)
+        
+        Returns:
+            Tupla con (éxito, nuevo_nombre_análisis, mensaje)
+        """
+        try:
+            return self._update_sentiment_use_case.execute(
+                analysis_id=analysis_name,
+                original_df=df,
+                modifications=modifications
+            )
+        except Exception as e:
+            return False, "", f"Error inesperado al actualizar sentimientos: {str(e)}"
 
     def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
