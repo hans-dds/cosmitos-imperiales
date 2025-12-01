@@ -39,3 +39,23 @@ class IAnalysisRepository(ABC):
     def delete_many(self, analysis_ids: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
         """Elimina múltiples análisis y retorna resultados individuales."""
         raise NotImplementedError
+
+    @abstractmethod
+    def clone_with_modifications(
+        self, 
+        original_analysis_id: str, 
+        modified_data: pd.DataFrame, 
+        suffix: str
+    ) -> Tuple[bool, str, str]:
+        """
+        Clona un análisis existente con datos modificados.
+        
+        Args:
+            original_analysis_id: ID del análisis original
+            modified_data: DataFrame con los datos modificados
+            suffix: Sufijo para el nuevo análisis (ej: '_modificacion_2024-12-01')
+        
+        Returns:
+            Tupla con (éxito, nuevo_analysis_id, mensaje)
+        """
+        raise NotImplementedError
