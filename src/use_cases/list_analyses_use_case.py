@@ -18,4 +18,4 @@ class ListAnalysesUseCase:
         Returns:
             Una lista de nombres de los análisis guardados.
         """
-        return self._analysis_repository.list_analyses()
+        return self._analysis_repository.list()

@@ -12,6 +12,11 @@ from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
 from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
 from use_cases.send_results_email_use_case import SendResultsEmailUseCase
+from use_cases.save_report_use_case import SaveReportUseCase
+from use_cases.list_reports_use_case import ListReportsUseCase
+from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
+from use_cases.delete_report_use_case import DeleteReportUseCase
+from adapters.repositories.report_repository_adapter import SQLReportRepository
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
 import logging
 import os
@@ -35,17 +40,24 @@ class Container:
         # 1. Adaptador de Repositorio
         db_config = {
             'host': settings.DB_HOST,
+            'port': settings.DB_PORT,
             'user': settings.DB_USER,
             'password': settings.DB_PASSWORD,
             'database': settings.DB_NAME
         }
 
         logger.info("Inicializando SQLandCSVAnalysisRepository con la"
-                    f" configuración de BD: {db_config}")
+                f" configuración de BD: {db_config}")
 
         self._analysis_repository = SQLandCSVAnalysisRepository(
             db_config=db_config,
             csv_base_dir=settings.CSV_BASE_DIR)
+
+        # Repositorio de reportes
+        self._report_repository = SQLReportRepository(
+            db_config=db_config,
+            reports_base_dir=os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'reports')
+        )
 
         # 2. Adaptador de Analizador de Sentimiento
         # Construir la ruta al modelo de manera robusta usando __file__
@@ -131,6 +143,22 @@ class Container:
         return SendResultsEmailUseCase(email_sender=self._email_sender)
 
     @property
+    def save_report_use_case(self) -> SaveReportUseCase:
+        return SaveReportUseCase(report_repository=self._report_repository)
+
+    @property
+    def list_reports_use_case(self) -> ListReportsUseCase:
+        return ListReportsUseCase(report_repository=self._report_repository)
+
+    @property
+    def clear_reports_history_use_case(self) -> ClearReportsHistoryUseCase:
+        return ClearReportsHistoryUseCase(report_repository=self._report_repository)
+
+    @property
+    def delete_report_use_case(self) -> DeleteReportUseCase:
+        return DeleteReportUseCase(report_repository=self._report_repository)
+
+    @property
     def streamlit_controller(self) -> StreamlitController:
         """
         Crea y devuelve una instancia de StreamlitController con todas las
@@ -144,6 +172,10 @@ class Container:
             delete_analysis_use_case=self.delete_analysis_use_case,
             prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
             send_results_email_use_case=self.send_results_email_use_case,
+            save_report_use_case=self.save_report_use_case,
+            list_reports_use_case=self.list_reports_use_case,
+            clear_reports_history_use_case=self.clear_reports_history_use_case,
+            delete_report_use_case=self.delete_report_use_case,
         )
 
 

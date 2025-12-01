@@ -32,7 +32,7 @@ class MainContent:
         self._state_manager = AnalysisStateManager()
         self._charts = ChartsComponent()
         self._table = TableComponent()
-        self._export = ExportComponent()
+        self._export = ExportComponent(controller)
         self._word_cloud = WordCloudComponent()
 
     def render(
