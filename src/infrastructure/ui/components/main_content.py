@@ -133,8 +133,111 @@ class MainContent:
         # Renderizar componentes
         self._charts.render(df_filtered, color_map)
         self._word_cloud.render(df_filtered)
-        self._table.render(df_filtered)
+        
+        # Renderizar tabla editable y manejar guardado
+        self._render_editable_table_with_save(df_filtered, analysis_name, color_map)
+        
         self._export.render(df_filtered, analysis_name, color_map)
+    
+    def _render_editable_table_with_save(
+        self, 
+        df: pd.DataFrame, 
+        analysis_name: str,
+        color_map: dict
+    ):
+        """
+        Renderiza tabla editable con botón de guardar cambios.
+        
+        Args:
+            df: DataFrame filtrado a mostrar
+            analysis_name: Nombre del análisis actual
+            color_map: Mapa de colores para gráficos
+        """
+        # Renderizar tabla editable
+        edited_df, has_changes = self._table.render_editable(df)
+        
+        # Mostrar botón de guardar si hay cambios
+        if has_changes:
+            st.info("⚠️ Se han detectado cambios en las etiquetas de clasificación.")
+            
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                if st.button("💾 Guardar cambios", type="primary", use_container_width=True):
+                    self._handle_sentiment_update(
+                        analysis_name=analysis_name,
+                        original_df=df,
+                        edited_df=edited_df
+                    )
+        else:
+            # Mensaje informativo cuando no hay cambios
+            st.caption("💡 Puedes editar las clasificaciones usando los menús desplegables de la tabla.")
+    
+    def _handle_sentiment_update(
+        self,
+        analysis_name: str,
+        original_df: pd.DataFrame,
+        edited_df: pd.DataFrame
+    ):
+        """
+        Maneja la actualización de sentimientos modificados.
+        
+        Args:
+            analysis_name: Nombre del análisis original
+            original_df: DataFrame original con columnas en español
+            edited_df: DataFrame editado con columnas en español
+        """
+        # Revertir el mapeo de nombres de columnas
+        reverse_mapping = {
+            'Calificación': 'calificacion',
+            'Comentario': 'comentarios',
+            'Clasificación': 'Clasificacion',
+            'Fiabilidad': 'Fiabilidad'
+        }
+        
+        # Renombrar columnas del DataFrame editado a nombres originales
+        edited_df_original_names = edited_df.rename(columns=reverse_mapping)
+        
+        # Detectar modificaciones comparando DataFrames
+        modifications = []
+        
+        # Usar los índices del DataFrame original
+        for idx in original_df.index:
+            # Buscar el índice correspondiente en el DataFrame editado
+            # (pueden ser diferentes después de filtros)
+            if idx in edited_df_original_names.index:
+                original_label = original_df.at[idx, 'Clasificacion']
+                new_label = edited_df_original_names.at[idx, 'Clasificacion']
+                
+                if original_label != new_label:
+                    modifications.append((idx, new_label))
+        
+        if not modifications:
+            st.warning("No se detectaron cambios reales para guardar.")
+            return
+        
+        # Obtener el DataFrame completo sin filtros desde el estado
+        full_df = self._state_manager.get_current_analysis()
+        
+        # Llamar al controlador para procesar la actualización
+        with st.spinner("Guardando cambios y creando nuevo análisis..."):
+            success, new_analysis_name, message = self._controller.handle_update_sentiment(
+                analysis_name=analysis_name,
+                df=full_df,
+                modifications=modifications
+            )
+        
+        if success:
+            st.success(f"✅ {message}")
+            st.info(f"📊 Nuevo análisis creado: **{new_analysis_name}**")
+            
+            # Limpiar estado de edición
+            if 'original_df_for_edit' in st.session_state:
+                del st.session_state['original_df_for_edit']
+            
+            # Recargar el análisis para mostrar los cambios
+            st.rerun()
+        else:
+            st.error(f"❌ Error al guardar cambios: {message}")
     
     def _apply_monthly_date_filter(self, df: pd.DataFrame) -> pd.DataFrame:
         """
