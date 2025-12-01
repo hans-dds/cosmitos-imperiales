@@ -11,6 +11,7 @@ from use_cases.send_results_email_use_case import SendResultsEmailUseCase
 from use_cases.save_report_use_case import SaveReportUseCase
 from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
+from use_cases.delete_report_use_case import DeleteReportUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 import os
 
@@ -33,6 +34,7 @@ class StreamlitController:
         save_report_use_case: SaveReportUseCase,
         list_reports_use_case: ListReportsUseCase,
         clear_reports_history_use_case: ClearReportsHistoryUseCase,
+        delete_report_use_case: DeleteReportUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
@@ -44,6 +46,7 @@ class StreamlitController:
         self._save_report_use_case = save_report_use_case
         self._list_reports_use_case = list_reports_use_case
         self._clear_reports_history_use_case = clear_reports_history_use_case
+        self._delete_report_use_case = delete_report_use_case
 
     def handle_file_upload(
         self,
@@ -199,6 +202,10 @@ class StreamlitController:
     def clear_report_history(self) -> Tuple[bool, str]:
         """Limpia el historial de reportes."""
         return self._clear_reports_history_use_case.execute()
+
+    def delete_report(self, report_id: int) -> Tuple[bool, str]:
+        """Elimina un reporte específico del historial."""
+        return self._delete_report_use_case.execute(report_id)
 
     def get_report_bytes(self, file_path: str) -> Tuple[bool, Optional[bytes]]:
         """Lee y devuelve el contenido del archivo de reporte.

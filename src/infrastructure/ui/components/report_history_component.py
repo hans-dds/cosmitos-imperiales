@@ -13,7 +13,8 @@ class ReportHistoryComponent:
             st.info("No hay reportes guardados aún.")
             return
         for r in reports:
-            cols = st.columns([3, 2, 3, 2])
+            # Ajuste de layout: tipo y fecha más cercanos y compactos
+            cols = st.columns([3, 1, 2, 1, 1])
             with cols[0]:
                 base = r.get('source_file_name') or r.get('analysis_name')
                 st.write(f"📄 {base}")
@@ -29,12 +30,20 @@ class ReportHistoryComponent:
                     st.button("Archivo no disponible", disabled=True, key=f"missing_{r['id']}")
                 else:
                     st.download_button(
-                        label="Descargar",
+                        label="⬇️",
                         data=data,
                         file_name=os.path.basename(path),
                         mime="application/pdf" if path.endswith('.pdf') else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         key=f"dl_{r['id']}"
                     )
+            with cols[4]:
+                if st.button("🗑️", key=f"del_{r['id']}"):
+                    ok, msg = controller.delete_report(r['id'])
+                    if ok:
+                        st.toast(msg)
+                        st.rerun()
+                    else:
+                        st.error(msg)
 
     def _render_actions(self, controller) -> None:
         with st.expander("Acciones", expanded=False):

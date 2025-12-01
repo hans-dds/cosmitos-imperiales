@@ -19,3 +19,7 @@ class IReportRepository:
     def clear(self) -> Tuple[bool, str]:
         """Limpia el historial de reportes y (opcionalmente) archivos asociados."""
         raise NotImplementedError()
+
+    def delete(self, report_id: int) -> Tuple[bool, str]:
+        """Elimina un reporte por id y borra su archivo del disco si existe."""
+        raise NotImplementedError()

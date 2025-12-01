@@ -122,3 +122,32 @@ class SQLReportRepository(IReportRepository):
             return True, f"Historial limpiado. Archivos eliminados: {deleted_count}"
         except Error as e:
             return False, f"Error al limpiar historial: {e}"
+
+    def delete(self, report_id: int) -> Tuple[bool, str]:
+        """Elimina un registro del historial y su archivo asociado si existe."""
+        try:
+            # Obtener metadatos para conocer la ruta
+            with mysql.connector.connect(**self._db_config) as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute("SELECT file_path FROM report_history WHERE id=%s", (report_id,))
+                    row = cursor.fetchone()
+                file_path = row.get('file_path') if row else None
+
+            # Eliminar archivo
+            deleted_file = 0
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                    deleted_file = 1
+                except Exception:
+                    deleted_file = 0
+
+            # Eliminar fila
+            with mysql.connector.connect(**self._db_config) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("DELETE FROM report_history WHERE id=%s", (report_id,))
+                conn.commit()
+
+            return True, f"Reporte eliminado. Archivos borrados: {deleted_file}"
+        except Error as e:
+            return False, f"Error al eliminar reporte: {e}"
