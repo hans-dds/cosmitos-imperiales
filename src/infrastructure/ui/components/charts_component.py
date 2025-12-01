@@ -5,6 +5,12 @@ import plotly.express as px
 import pandas as pd
 from typing import Dict
 
+from domain.services.trend_calculator import (
+    calculate_average_trend,
+    calculate_sentiment_distribution_trend,
+    calculate_trend_change
+)
+
 
 class ChartsComponent:
     """Componente responsable de renderizar todos los gráficos."""
@@ -160,7 +166,6 @@ class ChartsComponent:
             return
 
         # Validar que se reciban varias fechas
-
         if len(df['fecha'].unique()) < 2:
             st.info("La selección no contiene información suficiente"
                     " para mostrar gráficos de evolución histórica.")
@@ -170,16 +175,6 @@ class ChartsComponent:
             return
 
         try:
-            # Asegurar que es datetime
-            df = df.copy()
-            df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
-
-            # Filtrar filas con fecha inválida
-            df = df.dropna(subset=['fecha'])
-
-            if df.empty:
-                return
-
             st.markdown("---")
             st.header("Evolución Histórica")
 
@@ -193,34 +188,21 @@ class ChartsComponent:
                 )
 
             # Definir frecuencia para pandas grouper
-            # Usar 'M' y 'Q' para mayor compatibilidad
             freq = 'M' if agrupacion == "Mensual" else 'Q'
 
             # 1. Evolución del Promedio de Calificación
             st.subheader("Evolución del Puntaje Promedio")
 
-            # Asegurar que calificacion es numérica
-            df['calificacion'] = pd.to_numeric(df['calificacion'],
-                                               errors='coerce')
-
-            # Agrupar y calcular promedio
-            df_trend = df.groupby(
-                pd.Grouper(
-                    key='fecha',
-                    freq=freq))['calificacion'].mean().reset_index()
-            df_trend = df_trend.sort_values('fecha')
-            df_trend = df_trend.dropna(subset=['calificacion'])
+            df_trend = calculate_average_trend(df, freq)
 
             if df_trend.empty:
                 st.info("No hay suficientes datos para mostrar tendencias.")
             else:
-                # Calcular métricas de cambio (último vs anterior)
-                if len(df_trend) >= 2:
-                    last_val = df_trend.iloc[-1]['calificacion']
-                    prev_val = df_trend.iloc[-2]['calificacion']
-                    delta = last_val - prev_val
+                # Calcular métricas de cambio
+                last_val, _, delta = calculate_trend_change(df_trend)
 
-                    col_metric1, col_metric2 = st.columns(2)
+                if last_val is not None and delta is not None:
+                    col_metric1, _ = st.columns(2)
                     with col_metric1:
                         date_label = df_trend.iloc[-1]['fecha']\
                             .strftime('%Y-%m')
@@ -246,18 +228,9 @@ class ChartsComponent:
             # 2. Evolución de la Distribución de Clasificaciones
             st.subheader("Evolución de la Distribución de Sentimientos")
 
-            # Agrupar por fecha y clasificación
-            df_dist = df.groupby([pd.Grouper(key='fecha', freq=freq),
-                                  'Clasificacion']).size().reset_index(
-                                    name='cantidad')
+            df_dist = calculate_sentiment_distribution_trend(df, freq)
 
             if not df_dist.empty:
-                # Calcular porcentajes por fecha
-                df_totals = df_dist \
-                    .groupby('fecha')['cantidad'] \
-                    .transform('sum')
-                df_dist['porcentaje'] = (df_dist['cantidad'] / df_totals) * 100
-
                 fig_area = px.area(
                     df_dist,
                     x='fecha',
