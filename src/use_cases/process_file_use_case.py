@@ -59,9 +59,7 @@ class ProcessFileUseCase:
             analyzed_data['fecha'] = pd.to_datetime(fecha_mes)
 
         # 3. Guardar los resultados
-        table_name = f"analisis_{file_basename}"
-        self._analysis_repository.save_csv(analyzed_data, file_basename)
-        self._analysis_repository.save_mysql(analyzed_data, table_name)
+        self._analysis_repository.save(analyzed_data, file_basename)
 
         return analyzed_data
 

@@ -1,14 +1,12 @@
 """Componente para exportar análisis a Excel y PDF."""
 
 import streamlit as st
-"""Componente para exportar análisis a Excel y PDF."""
-
-import streamlit as st
 import pandas as pd
 from typing import Dict
 
 from infrastructure.ui.export import generate_excel_export
 from infrastructure.ui.export_pdf import generate_pdf_export
+from infrastructure.ui.utils.comments_filters import apply_comments_filters
 from infrastructure.ui.components.report_history_component import ReportHistoryComponent
 
 
@@ -59,31 +57,7 @@ class ExportComponent:
 
             with col_pdf:
                 try:
-                    # Construir selección de comentarios acorde a la UI
-                    comments_df = df
-                    sel_cat = st.session_state.get("comments_filter_category")
-                    if sel_cat and sel_cat != "Todas" and "Clasificacion" in comments_df.columns:
-                        comments_df = comments_df[comments_df["Clasificacion"] == sel_cat]
-                    # Aplicar ordenamiento como en la UI
-                    sort_by_label = st.session_state.get("comments_sort_by")
-                    sort_dir_label = st.session_state.get("comments_sort_dir")
-                    label_to_column = {
-                        "Calificación": "calificacion",
-                        "Clasificación": "Clasificacion",
-                        "Fiabilidad": "Fiabilidad",
-                    }
-                    if sort_by_label and sort_by_label != "Sin ordenar":
-                        col = label_to_column.get(sort_by_label)
-                        if col in comments_df.columns:
-                            comments_df = comments_df.sort_values(
-                                by=col,
-                                ascending=(sort_dir_label == "Ascendente"),
-                                kind="mergesort",
-                            )
-                    sel_count = st.session_state.get("comments_filter_count")
-                    if isinstance(sel_count, int) and sel_count > 0:
-                        comments_df = comments_df.head(sel_count)
-
+                    comments_df = apply_comments_filters(df, st.session_state)
                     pdf_bytes = generate_pdf_export(df, color_map, comments_df=comments_df)
                 except ValueError as error:
                     st.info(f"PDF no disponible: {error}")
@@ -135,12 +109,14 @@ class ExportComponent:
                             st.warning("No se detectaron correos válidos.")
                         else:
                             with st.spinner(f"Enviando correo a {len(to_emails)} destinatarios..."):
+                                filtered_comments = apply_comments_filters(df, st.session_state)
                                 success, message = self._controller.handle_send_email(
                                     to_emails=to_emails,
                                     analysis_name=analysis_name,
                                     df=df,
                                     attachment_type=attachment_format.lower(),
-                                    color_map=color_map
+                                    color_map=color_map,
+                                    comments_df=filtered_comments if attachment_format.lower() == 'pdf' else None,
                                 )
 
                                 if success:

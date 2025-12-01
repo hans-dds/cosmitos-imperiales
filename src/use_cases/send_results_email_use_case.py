@@ -17,10 +17,9 @@ class SendResultsEmailUseCase:
 
     def __init__(self, email_sender: SmtpEmailSender):
         self._email_sender = email_sender
-        # Regex simple para validar email
         self._email_regex = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
-    def execute(self, to_emails: List[str], analysis_name: str, df: pd.DataFrame, attachment_type: str = 'excel', color_map: Dict[str, str] = None) -> Tuple[bool, str]:
+    def execute(self, to_emails: List[str], analysis_name: str, df: pd.DataFrame, attachment_type: str = 'excel', color_map: Dict[str, str] = None, comments_df: pd.DataFrame | None = None) -> Tuple[bool, str]:
         """
         Ejecuta el envío del correo con el reporte adjunto.
 
@@ -30,6 +29,7 @@ class SendResultsEmailUseCase:
             df: DataFrame con los datos del análisis.
             attachment_type: Tipo de adjunto ('excel' o 'pdf').
             color_map: Mapa de colores (necesario para PDF).
+            comments_df: Subconjunto filtrado/ordenado de comentarios (usado para PDF y Excel para reflejar filtros de UI). Si es None, se usan todos.
 
         Returns:
             Tupla (exito, mensaje).
@@ -37,7 +37,6 @@ class SendResultsEmailUseCase:
         if not to_emails:
             return False, "La lista de correos está vacía."
 
-        # Validar formato de correos
         invalid_emails = [email for email in to_emails if not self._email_regex.match(email)]
         if invalid_emails:
             return False, f"Los siguientes correos no son válidos: {', '.join(invalid_emails)}"
@@ -59,10 +58,10 @@ El equipo de Cosmitos Imperiales
                 
                 filename = f"reporte_{analysis_name.replace(' ', '_')}.pdf"
                 temp_path = f"/tmp/{filename}"
-                pdf_bytes = generate_pdf_export(df, color_map)
+                pdf_bytes = generate_pdf_export(df, color_map, comments_df=comments_df)
                 with open(temp_path, "wb") as f:
                     f.write(pdf_bytes)
-            else: # Default to excel
+            else:  # Excel siempre exporta todos los datos (sin filtros de comentarios)
                 filename = f"reporte_{analysis_name.replace(' ', '_')}.xlsx"
                 temp_path = f"/tmp/{filename}"
                 excel_data = generate_excel_export(df)
@@ -85,7 +84,6 @@ El equipo de Cosmitos Imperiales
             logger.error(f"Error en SendResultsEmailUseCase: {e}")
             return False, f"Ocurrió un error inesperado: {str(e)}"
         finally:
-            # Limpiar archivo temporal
             if temp_path and os.path.exists(temp_path):
                 try:
                     os.remove(temp_path)

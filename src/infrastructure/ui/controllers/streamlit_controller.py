@@ -157,7 +157,8 @@ class StreamlitController:
         analysis_name: str,
         df: pd.DataFrame,
         attachment_type: str = 'excel',
-        color_map: Dict[str, str] = None
+        color_map: Dict[str, str] = None,
+        comments_df: pd.DataFrame | None = None,
     ) -> Tuple[bool, str]:
         """
         Maneja el envío de resultados por correo electrónico.
@@ -172,7 +173,14 @@ class StreamlitController:
         Returns:
             Tupla con (éxito, mensaje)
         """
-        return self._send_results_email_use_case.execute(to_emails, analysis_name, df, attachment_type, color_map)
+        return self._send_results_email_use_case.execute(
+            to_emails=to_emails,
+            analysis_name=analysis_name,
+            df=df,
+            attachment_type=attachment_type,
+            color_map=color_map,
+            comments_df=comments_df,
+        )
 
     def handle_save_report(
         self,
