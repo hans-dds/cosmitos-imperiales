@@ -107,17 +107,18 @@ class DeleteAnalysisComponent:
                 key="confirm_delete_btn",
                 type="primary"
             )
-            if confirm_btn:
-                self._execute_deletion()
         with col2:
             cancel_btn = st.button(
                 "Cancelar",
                 use_container_width=True,
                 key="cancel_delete_btn"
             )
-            if cancel_btn:
-                st.session_state.confirm_delete = False
-                st.rerun()
+        # Ejecutar acciones fuera del contexto de las columnas para que los mensajes ocupen todo el ancho
+        if confirm_btn:
+            self._execute_deletion()
+        if cancel_btn:
+            st.session_state.confirm_delete = False
+            st.rerun()
 
     def _execute_deletion(self):
         """
@@ -133,7 +134,7 @@ class DeleteAnalysisComponent:
         error_count = len(results) - success_count
         if all_success:
             st.success(
-                f"✅ {success_count} análisis eliminado"
+                f"{success_count} análisis eliminado"
                 f"{'s' if success_count > 1 else ''} exitosamente.")
         else:
             st.warning(
