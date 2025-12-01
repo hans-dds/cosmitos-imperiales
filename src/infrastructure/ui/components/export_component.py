@@ -64,6 +64,22 @@ class ExportComponent:
                     sel_cat = st.session_state.get("comments_filter_category")
                     if sel_cat and sel_cat != "Todas" and "Clasificacion" in comments_df.columns:
                         comments_df = comments_df[comments_df["Clasificacion"] == sel_cat]
+                    # Aplicar ordenamiento como en la UI
+                    sort_by_label = st.session_state.get("comments_sort_by")
+                    sort_dir_label = st.session_state.get("comments_sort_dir")
+                    label_to_column = {
+                        "Calificación": "calificacion",
+                        "Clasificación": "Clasificacion",
+                        "Fiabilidad": "Fiabilidad",
+                    }
+                    if sort_by_label and sort_by_label != "Sin ordenar":
+                        col = label_to_column.get(sort_by_label)
+                        if col in comments_df.columns:
+                            comments_df = comments_df.sort_values(
+                                by=col,
+                                ascending=(sort_dir_label == "Ascendente"),
+                                kind="mergesort",
+                            )
                     sel_count = st.session_state.get("comments_filter_count")
                     if isinstance(sel_count, int) and sel_count > 0:
                         comments_df = comments_df.head(sel_count)

@@ -74,16 +74,63 @@ class TableComponent:
         Returns:
             DataFrame filtrado
         """
-        # Filtro por categoría
+        # Preparar opciones de filtros y orden
         categories = ['Todas'] + sorted(
             df['Clasificacion'].dropna().unique().tolist()
         )
-        selected_category = st.selectbox("Filtrar por categoría", categories)
-        # Persistir selección para sincronizar con exportación a PDF
-        st.session_state["comments_filter_category"] = selected_category
+        prev_category = st.session_state.get("comments_filter_category", "Todas")
+        category_index = categories.index(prev_category) if prev_category in categories else 0
 
+        sort_options = ["Sin ordenar", "Calificación", "Clasificación"]
+        if 'Fiabilidad' in df.columns:
+            sort_options.append("Fiabilidad")
+        prev_sort = st.session_state.get("comments_sort_by", "Sin ordenar")
+        sort_index = sort_options.index(prev_sort) if prev_sort in sort_options else 0
+
+        sort_dir_options = ["Ascendente", "Descendente"]
+        prev_dir = st.session_state.get("comments_sort_dir", "Descendente")
+        dir_index = sort_dir_options.index(prev_dir) if prev_dir in sort_dir_options else 1
+
+        # Mostrar controles en una sola línea usando columnas
+        col1, col2, col3 = st.columns([3, 3, 2])
+        with col1:
+            selected_category = st.selectbox(
+                "Filtrar por categoría",
+                categories,
+                index=category_index,
+            )
+            st.session_state["comments_filter_category"] = selected_category
+        # Filtrar según la categoría seleccionada
         if selected_category != 'Todas':
             df = df[df['Clasificacion'] == selected_category]
+
+        with col2:
+            sort_by_label = st.selectbox(
+                "Ordenar por",
+                options=sort_options,
+                index=sort_index,
+            )
+            st.session_state["comments_sort_by"] = sort_by_label
+
+        with col3:
+            sort_dir_label = st.radio(
+                "Dirección",
+                options=sort_dir_options,
+                horizontal=True,
+                index=dir_index,
+            )
+            st.session_state["comments_sort_dir"] = sort_dir_label
+
+        # Aplicar orden si corresponde
+        label_to_column = {
+            "Calificación": "calificacion",
+            "Clasificación": "Clasificacion",
+            "Fiabilidad": "Fiabilidad",
+        }
+        if sort_by_label != "Sin ordenar":
+            col = label_to_column.get(sort_by_label)
+            if col in df.columns:
+                df = df.sort_values(by=col, ascending=(sort_dir_label == "Ascendente"), kind="mergesort")
 
         return df
 
