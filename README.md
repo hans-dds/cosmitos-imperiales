@@ -53,7 +53,8 @@ El script `database_setup.sql` se ejecutará automáticamente al iniciar el cont
 Crear un archivo `.env` en la raíz del proyecto si deseas cambiar la configuración por defecto:
 
 ```env
-DB_HOST=localhost
+DB_HOST=127.0.0.1
+DB_PORT=3307
 DB_USER=user
 DB_PASSWORD=password
 DB_NAME=cosmitos_imperiales_db
