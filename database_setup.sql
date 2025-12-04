@@ -15,3 +15,11 @@ CREATE TABLE IF NOT EXISTS analisis_sentimientos (
     calificacion FLOAT,
     Clasificacion VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS report_notes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    analysis_name VARCHAR(255) NOT NULL,
+    note_content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (analysis_name)
+);
