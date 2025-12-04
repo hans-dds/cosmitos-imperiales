@@ -15,6 +15,8 @@ from infrastructure.ui.components.table_component import TableComponent
 from infrastructure.ui.components.export_component import ExportComponent
 from infrastructure.ui.components.word_cloud_component import \
     WordCloudComponent
+from infrastructure.ui.components.notes_component import NotesComponent
+from infrastructure.ui.components.ai_suggestions_component import AISuggestionsComponent
 
 
 class MainContent:
@@ -37,6 +39,8 @@ class MainContent:
         self._word_cloud = WordCloudComponent()
         self.logger = getLogger(__name__)
         self.logger.setLevel('INFO')
+        self._notes_component = NotesComponent()
+        self._ai_component = AISuggestionsComponent()
 
     def render(
         self,
@@ -59,6 +63,16 @@ class MainContent:
             self._handle_load_analysis(analysis_to_load)
         # Mostrar contenido del análisis actual
         self._render_analysis_display()
+        # Mostrar Sugerencias y Notas
+        if 'df_display' in st.session_state and st.session_state.selected_analysis:
+            current_df = st.session_state.df_display
+            current_name = st.session_state.selected_analysis
+            
+            # Renderizar Sugerencia con IA
+            self._ai_component.render(self._controller, current_df)
+            
+            # Renderizar Notas
+            self._notes_component.render(self._controller, current_name)
 
     def _handle_file_upload(self, uploaded_file):
         """

@@ -13,6 +13,8 @@ from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
 from use_cases.delete_report_use_case import DeleteReportUseCase
 from use_cases.update_sentiment_use_case import UpdateSentimentUseCase
+from use_cases.manage_notes_use_case import ManageNotesUseCase
+from use_cases.get_suggestions_use_case import GetSuggestionsUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 import os
 
@@ -37,6 +39,8 @@ class StreamlitController:
         clear_reports_history_use_case: ClearReportsHistoryUseCase,
         delete_report_use_case: DeleteReportUseCase,
         update_sentiment_use_case: UpdateSentimentUseCase,
+        manage_notes_use_case: ManageNotesUseCase,
+        get_suggestions_use_case: GetSuggestionsUseCase
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
@@ -50,6 +54,8 @@ class StreamlitController:
         self._clear_reports_history_use_case = clear_reports_history_use_case
         self._delete_report_use_case = delete_report_use_case
         self._update_sentiment_use_case = update_sentiment_use_case
+        self._manage_notes_use_case = manage_notes_use_case
+        self._get_suggestions_use_case = get_suggestions_use_case
 
     def handle_file_upload(
         self,
@@ -279,3 +285,15 @@ class StreamlitController:
             return True, combined_df, None
         except Exception as e:
             return False, None, f"Error al consolidar los análisis: {str(e)}"
+        
+    def get_notes(self, analysis_name: str):
+        return self._manage_notes_use_case.get_notes(analysis_name)
+
+    def add_note(self, analysis_name: str, content: str):
+        return self._manage_notes_use_case.add_note(analysis_name, content)
+
+    def delete_note(self, note_id: int):
+        return self._manage_notes_use_case.delete_note(note_id)
+
+    def get_ai_suggestions(self, df: pd.DataFrame) -> str:
+        return self._get_suggestions_use_case.execute(df)

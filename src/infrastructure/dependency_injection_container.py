@@ -19,6 +19,10 @@ from use_cases.delete_report_use_case import DeleteReportUseCase
 from use_cases.update_sentiment_use_case import UpdateSentimentUseCase
 from adapters.repositories.report_repository_adapter import SQLReportRepository
 from infrastructure.ui.controllers.streamlit_controller import StreamlitController
+from adapters.repositories.note_repository_adapter import SQLNoteRepository
+from adapters.gemini_adapter import GeminiAdvisorAdapter
+from use_cases.manage_notes_use_case import ManageNotesUseCase
+from use_cases.get_suggestions_use_case import GetSuggestionsUseCase
 import logging
 import os
 # Configure logging
@@ -85,6 +89,13 @@ class Container:
             smtp_password=settings.SMTP_PASSWORD,
             email_from=settings.EMAIL_FROM
         )
+
+        # 6. Instanciar nuevos adaptadores
+        self._note_repository = SQLNoteRepository(db_config)
+        
+        # Cargar API Key desde variables de entorno
+        gemini_key = os.getenv("GEMINI_API_KEY", "") 
+        self._ai_advisor = GeminiAdvisorAdapter(api_key=gemini_key)
 
     @property
     def process_file_use_case(self) -> ProcessFileUseCase:
@@ -186,7 +197,34 @@ class Container:
             list_reports_use_case=self.list_reports_use_case,
             clear_reports_history_use_case=self.clear_reports_history_use_case,
             delete_report_use_case=self.delete_report_use_case,
+            update_sentiment_use_case=self.update_sentiment_use_case
+        )
+    
+    @property
+    def manage_notes_use_case(self) -> ManageNotesUseCase:
+        return ManageNotesUseCase(self._note_repository)
+
+    @property
+    def get_suggestions_use_case(self) -> GetSuggestionsUseCase:
+        return GetSuggestionsUseCase(self._ai_advisor)
+
+    @property
+    def streamlit_controller(self) -> StreamlitController:
+        return StreamlitController(
+            read_file_use_case=self.read_file_use_case,
+            process_file_use_case=self.process_file_use_case,
+            load_analysis_use_case=self.load_analysis_use_case,
+            list_analyses_use_case=self.list_analyses_use_case,
+            delete_analysis_use_case=self.delete_analysis_use_case,
+            prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
+            send_results_email_use_case=self.send_results_email_use_case,
+            save_report_use_case=self.save_report_use_case,
+            list_reports_use_case=self.list_reports_use_case,
+            clear_reports_history_use_case=self.clear_reports_history_use_case,
+            delete_report_use_case=self.delete_report_use_case,
             update_sentiment_use_case=self.update_sentiment_use_case,
+            manage_notes_use_case=self.manage_notes_use_case,
+            get_suggestions_use_case=self.get_suggestions_use_case
         )
 
 
