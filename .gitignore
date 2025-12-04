@@ -26,5 +26,9 @@ LLM/*
 
 # Nuevos analisis guardados
 datos_analizados/
+reports/
+sent_emails/
 
 uv.lock
+
+.idea/
