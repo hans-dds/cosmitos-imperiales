@@ -1,0 +1,21 @@
+# 1. CONFIGURACIÓN DE BASE DE DATOS
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_NAME=cosmitos_imperiales_db
+DB_USER=user
+DB_PASSWORD=password
+
+# 2. API KEY
+GEMINI_API_KEY=AIzaSyAWH9eG3vIdUUhag8Ozp0p1EBIZ466NHsA
+
+# 3. CONFIGURACIÓN DE CORREO (SMTP)
+SMTP_SERVER=localhost
+SMTP_PORT=1025
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=notificaciones@cosmitos.com
+
+# 4. CONFIGURACIÓN GENERAL DE LA APP
+APP_TITLE=Gestor de Satisfacción y Seguimiento de Posventa
+CSV_BASE_DIR=datos_analizados
+EXCEL_REQUIRED_SHEETS=ATC,Encuesta salida
