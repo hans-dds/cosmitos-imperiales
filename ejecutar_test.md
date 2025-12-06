@@ -1,11 +1,10 @@
-# Lanzo SonarQube con el nombre de proyecto "sonar"
-podman-compose -f sonar.yml -p sonar up -d
+# Ejectuar sonarqube
+cd sonarqube/ && podman-compose up -d
 
-# Lanzo Jenkins con el nombre de proyecto "jenkins"
-podman-compose -f jenkins.yml -p jenkins up -d
+# Ejecutar test
+cd .. && uv run pytest --cov=src --cov-report=xml:coverage.xml tests/ -q
 
-sqp_f949b42e0bfbea09204d41311eefdccdaeb74d6b
-
+# Ejecutar SonarQube Scanner
 podman run \
     --rm \
     --network host \
@@ -15,5 +14,3 @@ podman run \
     -Dsonar.sources=. \
     -Dsonar.host.url=http://localhost:9000 \
     -Dsonar.token=sqp_f949b42e0bfbea09204d41311eefdccdaeb74d6b
-
-uv run pytest --cov=src --cov-report=xml:coverage.xml tests/ -q

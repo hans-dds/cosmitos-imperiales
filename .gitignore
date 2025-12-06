@@ -32,3 +32,5 @@ sent_emails/
 uv.lock
 
 .idea/
+.ruff_cache/
+.pytest_cache/
