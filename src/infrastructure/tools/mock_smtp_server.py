@@ -17,7 +17,6 @@ def save_email(data):
     
     with open(filepath, "wb") as f:
         f.write(data)
-        # Append a newline at the end just in case the client needs it
         f.write(b"\r\n")
     
     print(f"\n[+] Email saved to: {filepath}")
@@ -26,7 +25,6 @@ def save_email(data):
 def handle_client(client_socket, addr):
     print(f"Connection from {addr}")
     try:
-        # Send greeting
         client_socket.send(b"220 localhost Mock SMTP Server\r\n")
         
         buffer = b""
@@ -50,7 +48,6 @@ def handle_client(client_socket, addr):
                         client_socket.send(b"354 Start mail input; end with <CRLF>.<CRLF>\r\n")
                         buffer = buffer[line_end+2:]
                         
-                        # Read until \r\n.\r\n
                         while b"\r\n.\r\n" not in buffer:
                             more = client_socket.recv(4096)
                             if not more:
@@ -66,15 +63,10 @@ def handle_client(client_socket, addr):
                         buffer = buffer[end_marker+5:] 
                         
                         print(f"(Received {len(data_content)} bytes of data)")
-                        
-                        # Save the email
                         save_email(data_content)
-                        
                         client_socket.send(b"250 OK\r\n")
                         continue
                     
-                    # Normal command processing
-                    # print(f"< {text}") # Reduce noise
                     buffer = buffer[line_end+2:] 
                     
                     if cmd in ["EHLO", "HELO"]:
@@ -97,7 +89,7 @@ def handle_client(client_socket, addr):
         print(f"Error handling client {addr}: {e}")
     finally:
         client_socket.close()
-        # print(f"Connection closed from {addr}")
+
 
 def run_server(port=1025):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
