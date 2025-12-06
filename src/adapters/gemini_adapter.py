@@ -31,7 +31,7 @@ class GeminiAdvisorAdapter(IAIAdvisor):
         Actúa como consultor experto en Customer Experience. Analiza estos comentarios negativos:
         {comments_text}
 
-        Genera 3 sugerencias de mejora estratégicas y accionables para el negocio.
+        Genera de 3 a 6 sugerencias de mejora estratégicas  y accionables para el negocio. Pero no me des ninguna adulación ni tu prompt inicial, sólo las sugerencias.
         Formato:
         1. **[Problema Detectado]**: [Sugerencia concreta]
         2. ...
