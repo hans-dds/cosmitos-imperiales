@@ -3,10 +3,11 @@ from mysql.connector import Error
 from typing import List, Tuple, Dict
 from use_cases.ports.note_repository import INoteRepository
 
+
 class SQLNoteRepository(INoteRepository):
     def __init__(self, db_config: dict):
         self._db_config = db_config
-    
+
     def _ensure_table_exists(self, cursor):
         cursor.execute(
             """
@@ -47,7 +48,9 @@ class SQLNoteRepository(INoteRepository):
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
                     self._ensure_table_exists(cursor)
-                    cursor.execute("DELETE FROM report_notes WHERE id = %s", (note_id,))
+                    cursor.execute(
+                        "DELETE FROM report_notes WHERE id = %s", (note_id,)
+                    )
                 conn.commit()
             return True, "Nota eliminada."
         except Error as e:

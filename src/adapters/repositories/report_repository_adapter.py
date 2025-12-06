@@ -13,7 +13,7 @@ class SQLReportRepository(IReportRepository):
     archivos en disco bajo un directorio configurable.
     """
 
-    def __init__(self, db_config: dict, reports_base_dir: str = 'reports'):
+    def __init__(self, db_config: dict, reports_base_dir: str = "reports"):
         self._db_config = db_config
         self._reports_base_dir = reports_base_dir
         os.makedirs(self._reports_base_dir, exist_ok=True)
@@ -48,7 +48,9 @@ class SQLReportRepository(IReportRepository):
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
                     cursor.execute("SELECT file_path FROM report_history")
-                    return [row[0] for row in cursor.fetchall() if row and row[0]]
+                    return [
+                        row[0] for row in cursor.fetchall() if row and row[0]
+                    ]
         except Error:
             return []
 
@@ -65,7 +67,15 @@ class SQLReportRepository(IReportRepository):
                 continue
         return deleted
 
-    def save(self, analysis_name: str, report_format: str, file_path: str, source_file_name: str = None, date_range: str = None, comments_count: int = None) -> Tuple[bool, str]:
+    def save(
+        self,
+        analysis_name: str,
+        report_format: str,
+        file_path: str,
+        source_file_name: str = None,
+        date_range: str = None,
+        comments_count: int = None,
+    ) -> Tuple[bool, str]:
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
@@ -74,7 +84,14 @@ class SQLReportRepository(IReportRepository):
                         INSERT INTO report_history (analysis_name, report_format, file_path, source_file_name, date_range, comments_count)
                         VALUES (%s, %s, %s, %s, %s, %s)
                         """,
-                        (analysis_name, report_format, file_path, source_file_name, date_range, comments_count),
+                        (
+                            analysis_name,
+                            report_format,
+                            file_path,
+                            source_file_name,
+                            date_range,
+                            comments_count,
+                        ),
                     )
                 conn.commit()
             return True, "Reporte guardado en historial"
@@ -119,7 +136,10 @@ class SQLReportRepository(IReportRepository):
                     cursor.execute("TRUNCATE TABLE report_history")
                 conn.commit()
 
-            return True, f"Historial limpiado. Archivos eliminados: {deleted_count}"
+            return (
+                True,
+                f"Historial limpiado. Archivos eliminados: {deleted_count}",
+            )
         except Error as e:
             return False, f"Error al limpiar historial: {e}"
 
@@ -129,9 +149,12 @@ class SQLReportRepository(IReportRepository):
             # Obtener metadatos para conocer la ruta
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute("SELECT file_path FROM report_history WHERE id=%s", (report_id,))
+                    cursor.execute(
+                        "SELECT file_path FROM report_history WHERE id=%s",
+                        (report_id,),
+                    )
                     row = cursor.fetchone()
-                file_path = row.get('file_path') if row else None
+                file_path = row.get("file_path") if row else None
 
             # Eliminar archivo
             deleted_file = 0
@@ -145,9 +168,14 @@ class SQLReportRepository(IReportRepository):
             # Eliminar fila
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
-                    cursor.execute("DELETE FROM report_history WHERE id=%s", (report_id,))
+                    cursor.execute(
+                        "DELETE FROM report_history WHERE id=%s", (report_id,)
+                    )
                 conn.commit()
 
-            return True, f"Reporte eliminado. Archivos borrados: {deleted_file}"
+            return (
+                True,
+                f"Reporte eliminado. Archivos borrados: {deleted_file}",
+            )
         except Error as e:
             return False, f"Error al eliminar reporte: {e}"

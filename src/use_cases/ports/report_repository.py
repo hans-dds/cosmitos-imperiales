@@ -4,7 +4,9 @@ from typing import List, Optional, Tuple
 class IReportRepository:
     """Puerto para persistencia y consulta de historial de reportes."""
 
-    def save(self, analysis_name: str, report_format: str, file_path: str) -> Tuple[bool, str]:
+    def save(
+        self, analysis_name: str, report_format: str, file_path: str
+    ) -> Tuple[bool, str]:
         """Guarda metadatos del reporte generado."""
         raise NotImplementedError()
 

@@ -15,63 +15,87 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
     """
 
     def __init__(
-            self,
-            db_config:
-            dict,
-            csv_base_dir: str = 'datos_analizados'
-            ):
+        self, db_config: dict, csv_base_dir: str = "datos_analizados"
+    ):
         self._db_config = db_config
         self._csv_base_dir = csv_base_dir
         os.makedirs(self._csv_base_dir, exist_ok=True)
 
-    def _save_csv(self, data: pd.DataFrame, analysis_id: str) -> Tuple[bool, str]:
+    def _save_csv(
+        self, data: pd.DataFrame, analysis_id: str
+    ) -> Tuple[bool, str]:
         if data.empty:
             return False, "No se proporcionaron datos para guardar."
-        file_path = os.path.join(self._csv_base_dir, f"{analysis_id}_limpio.csv")
+        file_path = os.path.join(
+            self._csv_base_dir, f"{analysis_id}_limpio.csv"
+        )
         try:
-            data.to_csv(file_path, index=False, encoding='utf-8-sig')
+            data.to_csv(file_path, index=False, encoding="utf-8-sig")
             return True, f"Datos guardados exitosamente en '{file_path}'."
         except Exception as e:
             return False, f"Fallo al guardar el archivo CSV. Razón: {e}"
 
-    def _save_mysql(self, data: pd.DataFrame, table_name: str) -> Tuple[bool, str]:
+    def _save_mysql(
+        self, data: pd.DataFrame, table_name: str
+    ) -> Tuple[bool, str]:
         try:
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
-                    if not all(c.isalnum() or c == '_' for c in table_name):
+                    if not all(c.isalnum() or c == "_" for c in table_name):
                         return False, f"Nombre de tabla inválido: {table_name}"
                     self._ensure_table_exists(cursor, table_name)
                     # Sobrescribir contenido previo del análisis para evitar duplicados
                     cursor.execute(f"TRUNCATE TABLE `{table_name}`")
-                    base_columns = ["comentarios", "calificacion", "Clasificacion", "Fiabilidad"]
+                    base_columns = [
+                        "comentarios",
+                        "calificacion",
+                        "Clasificacion",
+                        "Fiabilidad",
+                    ]
                     insert_columns = list(base_columns)
-                    has_fecha = 'fecha' in data.columns
+                    has_fecha = "fecha" in data.columns
                     if has_fecha:
-                        insert_columns.append('fecha')
+                        insert_columns.append("fecha")
                     placeholders = ", ".join(["%s"] * len(insert_columns))
                     sql = (
-                        f"INSERT INTO `{table_name}` (" + ", ".join(insert_columns) + ") VALUES (" + placeholders + ")"
+                        f"INSERT INTO `{table_name}` ("
+                        + ", ".join(insert_columns)
+                        + ") VALUES ("
+                        + placeholders
+                        + ")"
                     )
                     for _, row in data.iterrows():
-                        fiabilidad = row.get('Fiabilidad', 'N/A')
+                        fiabilidad = row.get("Fiabilidad", "N/A")
                         if isinstance(fiabilidad, (int, float)):
                             fiabilidad = str(fiabilidad)
-                        values = [row['comentarios'], row['calificacion'], row['Clasificacion'], fiabilidad]
+                        values = [
+                            row["comentarios"],
+                            row["calificacion"],
+                            row["Clasificacion"],
+                            fiabilidad,
+                        ]
                         if has_fecha:
-                            fecha_val = row.get('fecha')
-                            if pd.notna(fecha_val) and hasattr(fecha_val, 'date'):
+                            fecha_val = row.get("fecha")
+                            if pd.notna(fecha_val) and hasattr(
+                                fecha_val, "date"
+                            ):
                                 fecha_val = fecha_val.date()
                             elif pd.isna(fecha_val):
                                 fecha_val = None
                             else:
                                 try:
-                                    fecha_val = pd.to_datetime(fecha_val).date()
+                                    fecha_val = pd.to_datetime(
+                                        fecha_val
+                                    ).date()
                                 except ValueError:
                                     fecha_val = None
                             values.append(fecha_val)
                         cursor.execute(sql, values)
                     conn.commit()
-            return True, f"Datos guardados exitosamente en la tabla MySQL '{table_name}'."
+            return (
+                True,
+                f"Datos guardados exitosamente en la tabla MySQL '{table_name}'.",
+            )
         except Error as e:
             return False, f"Error al conectar o guardar en MySQL: {e}"
 
@@ -87,7 +111,7 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
     def load(self, analysis_id: str) -> pd.DataFrame:
         try:
             with mysql.connector.connect(**self._db_config) as conn:
-                if not all(c.isalnum() or c == '_' for c in analysis_id):
+                if not all(c.isalnum() or c == "_" for c in analysis_id):
                     return pd.DataFrame()
                 query = f"SELECT * FROM `{analysis_id}`"
                 df = pd.read_sql(query, conn)
@@ -108,19 +132,30 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             # Eliminar tabla de MySQL
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
-                    if not all(c.isalnum() or c == '_' for c in analysis_id):
-                        return False, f"Nombre de tabla inválido: {analysis_id}"
+                    if not all(c.isalnum() or c == "_" for c in analysis_id):
+                        return (
+                            False,
+                            f"Nombre de tabla inválido: {analysis_id}",
+                        )
                     cursor.execute(f"SHOW TABLES LIKE '{analysis_id}'")
                     if not cursor.fetchone():
-                        return False, f"El análisis '{analysis_id}' no existe en la base de datos."
+                        return (
+                            False,
+                            f"El análisis '{analysis_id}' no existe en la base de datos.",
+                        )
                     cursor.execute(f"DROP TABLE IF EXISTS `{analysis_id}`")
                     conn.commit()
             # Intentar eliminar el archivo CSV asociado si existe
             # El nombre del archivo CSV se deriva del nombre de la tabla
             # (sin el prefijo 'analisis_')
-            csv_file_name = analysis_id.replace('analisis_', '') if analysis_id.startswith('analisis_') else analysis_id
+            csv_file_name = (
+                analysis_id.replace("analisis_", "")
+                if analysis_id.startswith("analisis_")
+                else analysis_id
+            )
             csv_path = os.path.join(
-                self._csv_base_dir, f"{csv_file_name}_limpio.csv")
+                self._csv_base_dir, f"{csv_file_name}_limpio.csv"
+            )
             csv_deleted = False
             if os.path.exists(csv_path):
                 try:
@@ -128,19 +163,26 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                     csv_deleted = True
                 except Exception as e:
                     # No es crítico si no se puede eliminar el CSV
-                    print("Advertencia: No se pudo eliminar el archivo CSV"
-                          f" '{csv_path}': {e}")
+                    print(
+                        "Advertencia: No se pudo eliminar el archivo CSV"
+                        f" '{csv_path}': {e}"
+                    )
             # Mensaje base de eliminación exitosa
-            msg = (f"Análisis '{analysis_id}' eliminado exitosamente de la base de datos.")
+            msg = f"Análisis '{analysis_id}' eliminado exitosamente de la base de datos."
             if csv_deleted:
                 msg += " Archivo CSV también eliminado."
             return True, msg
         except Error as e:
             return False, f"Error al eliminar el análisis '{analysis_id}': {e}"
         except Exception as e:
-            return False, f"Error inesperado al eliminar el análisis '{analysis_id}': {e}"
+            return (
+                False,
+                f"Error inesperado al eliminar el análisis '{analysis_id}': {e}",
+            )
 
-    def delete_many(self, analysis_ids: List[str]) -> Tuple[bool, List[Tuple[str, bool, str]]]:
+    def delete_many(
+        self, analysis_ids: List[str]
+    ) -> Tuple[bool, List[Tuple[str, bool, str]]]:
         results: List[Tuple[str, bool, str]] = []
         all_success = True
         for aid in analysis_ids:
@@ -151,7 +193,11 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         return all_success, results
 
     def save(self, data: pd.DataFrame, analysis_id: str) -> Tuple[bool, str]:
-        table_name = f"analisis_{analysis_id}" if not analysis_id.startswith('analisis_') else analysis_id
+        table_name = (
+            f"analisis_{analysis_id}"
+            if not analysis_id.startswith("analisis_")
+            else analysis_id
+        )
         ok_csv, msg_csv = self._save_csv(data, analysis_id)
         ok_sql, msg_sql = self._save_mysql(data, table_name)
         if ok_csv and ok_sql:
@@ -163,19 +209,19 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
         return False, f"Fallos: CSV={msg_csv}; MySQL={msg_sql}"
 
     def clone_with_modifications(
-        self, 
-        original_analysis_id: str, 
-        modified_data: pd.DataFrame, 
-        suffix: str
+        self,
+        original_analysis_id: str,
+        modified_data: pd.DataFrame,
+        suffix: str,
     ) -> Tuple[bool, str, str]:
         """
         Clona un análisis existente con datos modificados.
-        
+
         Args:
             original_analysis_id: ID del análisis original
             modified_data: DataFrame con los datos modificados
             suffix: Sufijo para el nuevo análisis (ej: '_modificacion_2024-12-01')
-        
+
         Returns:
             Tupla con (éxito, nuevo_analysis_id, mensaje)
         """
@@ -184,30 +230,58 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor() as cursor:
                     # Validar nombre de tabla
-                    if not all(c.isalnum() or c == '_' for c in original_analysis_id):
-                        return False, "", f"Nombre de análisis inválido: {original_analysis_id}"
-                    
+                    if not all(
+                        c.isalnum() or c == "_" for c in original_analysis_id
+                    ):
+                        return (
+                            False,
+                            "",
+                            f"Nombre de análisis inválido: {original_analysis_id}",
+                        )
+
                     # Verificar que la tabla original existe
-                    cursor.execute(f"SHOW TABLES LIKE '{original_analysis_id}'")
+                    cursor.execute(
+                        f"SHOW TABLES LIKE '{original_analysis_id}'"
+                    )
                     if not cursor.fetchone():
-                        return False, "", f"El análisis original '{original_analysis_id}' no existe."
+                        return (
+                            False,
+                            "",
+                            f"El análisis original '{original_analysis_id}' no existe.",
+                        )
         except Error as e:
             return False, "", f"Error al verificar análisis original: {e}"
-        
+
         # Generar nuevo ID
         # Si el analysis_id original ya tiene el prefijo 'analisis_', lo removemos temporalmente
-        base_id = original_analysis_id.replace('analisis_', '', 1) if original_analysis_id.startswith('analisis_') else original_analysis_id
+        base_id = (
+            original_analysis_id.replace("analisis_", "", 1)
+            if original_analysis_id.startswith("analisis_")
+            else original_analysis_id
+        )
         new_analysis_id = f"{base_id}{suffix}"
-        
+
         # Guardar el nuevo análisis usando el método save existente
         success, message = self.save(modified_data, new_analysis_id)
-        
+
         if success:
             # Construir el ID completo con prefijo si es necesario
-            full_new_id = f"analisis_{new_analysis_id}" if not new_analysis_id.startswith('analisis_') else new_analysis_id
-            return True, full_new_id, f"Análisis clonado exitosamente como '{full_new_id}'."
+            full_new_id = (
+                f"analisis_{new_analysis_id}"
+                if not new_analysis_id.startswith("analisis_")
+                else new_analysis_id
+            )
+            return (
+                True,
+                full_new_id,
+                f"Análisis clonado exitosamente como '{full_new_id}'.",
+            )
         else:
-            return False, "", f"Error al guardar el análisis clonado: {message}"
+            return (
+                False,
+                "",
+                f"Error al guardar el análisis clonado: {message}",
+            )
 
     def _ensure_table_exists(self, cursor, table_name: str) -> None:
         cursor.execute(f"""
@@ -219,4 +293,3 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
             Fiabilidad VARCHAR(255),
             fecha DATE NULL
         )""")
-

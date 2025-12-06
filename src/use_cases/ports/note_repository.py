@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict
 
+
 class INoteRepository(ABC):
     @abstractmethod
     def add(self, analysis_name: str, content: str) -> Tuple[bool, str]:
