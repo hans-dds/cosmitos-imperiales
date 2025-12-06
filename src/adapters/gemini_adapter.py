@@ -2,11 +2,12 @@ import google.generativeai as genai
 import pandas as pd
 from use_cases.ports.ai_advisor import IAIAdvisor
 
+
 class GeminiAdvisorAdapter(IAIAdvisor):
     def __init__(self, api_key: str):
         if api_key:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.model = genai.GenerativeModel("gemini-2.5-flash")
         else:
             self.model = None
 
@@ -16,8 +17,10 @@ class GeminiAdvisorAdapter(IAIAdvisor):
 
         # Filtramos detractores (Ajusta la lógica si usas escala 0-10)
         # Asumiendo que 'Clasificacion' o 'calificacion' existen
-        if 'calificacion' in df.columns:
-            detractors = df[df['calificacion'] <= 6]['comentarios'].dropna().tolist()
+        if "calificacion" in df.columns:
+            detractors = (
+                df[df["calificacion"] <= 6]["comentarios"].dropna().tolist()
+            )
         else:
             return "No se encontró columna de calificación."
 
@@ -36,7 +39,7 @@ class GeminiAdvisorAdapter(IAIAdvisor):
         1. **[Problema Detectado]**: [Sugerencia concreta]
         2. ...
         """
-        
+
         try:
             response = self.model.generate_content(prompt)
             return response.text

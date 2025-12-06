@@ -25,15 +25,20 @@ def convert_numeric_to_sentiment(value) -> str:
 
 
 def convert_dataframe_classifications(df: pd.DataFrame) -> pd.DataFrame:
-    """Convierte la columna 'Clasificacion' a texto si contiene valores numéricos.
-    """
-    if df.empty or 'Clasificacion' not in df.columns:
+    """Convierte la columna 'Clasificacion' a texto si contiene valores numéricos."""
+    if df.empty or "Clasificacion" not in df.columns:
         return df
     df = df.copy()
-    if df['Clasificacion'].dtype in ['int64', 'float64']:
-        df['Clasificacion'] = df['Clasificacion'].apply(convert_numeric_to_sentiment)
-    elif df['Clasificacion'].dtype == 'object':
-        numeric_mask = pd.to_numeric(df['Clasificacion'], errors='coerce').notna()
+    if df["Clasificacion"].dtype in ["int64", "float64"]:
+        df["Clasificacion"] = df["Clasificacion"].apply(
+            convert_numeric_to_sentiment
+        )
+    elif df["Clasificacion"].dtype == "object":
+        numeric_mask = pd.to_numeric(
+            df["Clasificacion"], errors="coerce"
+        ).notna()
         if numeric_mask.any():
-            df.loc[numeric_mask, 'Clasificacion'] = df.loc[numeric_mask, 'Clasificacion'].apply(convert_numeric_to_sentiment)
+            df.loc[numeric_mask, "Clasificacion"] = df.loc[
+                numeric_mask, "Clasificacion"
+            ].apply(convert_numeric_to_sentiment)
     return df

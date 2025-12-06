@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
+
 class ISuggestionGenerator(ABC):
     """
     Puerto (Interfaz) para el servicio que genera sugerencias de mejora

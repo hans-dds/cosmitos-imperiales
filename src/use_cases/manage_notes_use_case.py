@@ -1,6 +1,7 @@
 from typing import List, Dict, Tuple
 from use_cases.ports.note_repository import INoteRepository
 
+
 class ManageNotesUseCase:
     def __init__(self, repo: INoteRepository):
         self._repo = repo
