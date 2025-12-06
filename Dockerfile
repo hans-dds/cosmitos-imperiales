@@ -1,20 +1,15 @@
-# Use an official Python runtime as a parent image
-FROM python:3.11-slim
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the project definition file and install dependencies
 COPY pyproject.toml .
 COPY src/ ./src/
-RUN pip install --no-cache-dir .
+COPY docker/entrypoint.sh ./docker/entrypoint.sh
 
-# Make port 8501 available to the world outside this container
+# Instalación de dependencias vía UV
+RUN uv sync --no-dev \
+    && chmod +x ./docker/entrypoint.sh
+
 EXPOSE 8501
 
-# Define environment variable
-ENV STREAMLIT_SERVER_PORT 8501
-ENV STREAMLIT_SERVER_ADDRESS 0.0.0.0
-
-# Run app.py when the container launches
-CMD ["streamlit", "run", "src/app.py"]
+CMD ["/app/docker/entrypoint.sh"]

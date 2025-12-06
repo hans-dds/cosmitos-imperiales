@@ -5,12 +5,15 @@ barra lateral.
 
 import streamlit as st
 from typing import Tuple, Optional
-from infrastructure.ui.controllers.streamlit_controller import \
-    StreamlitController
-from infrastructure.ui.components.file_upload_component import \
-    FileUploadComponent
-from infrastructure.ui.components.delete_analysis_component import \
-    DeleteAnalysisComponent
+from infrastructure.ui.controllers.streamlit_controller import (
+    StreamlitController,
+)
+from infrastructure.ui.components.file_upload_component import (
+    FileUploadComponent,
+)
+from infrastructure.ui.components.delete_analysis_component import (
+    DeleteAnalysisComponent,
+)
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 
 
@@ -40,7 +43,7 @@ class SidebarComponent:
         st.sidebar.title("Controles")
         analysis_to_load = None
         # Inicializar session_state para el análisis seleccionado
-        if 'selected_analysis' not in st.session_state:
+        if "selected_analysis" not in st.session_state:
             st.session_state.selected_analysis = None
         # Renderizar componente de carga de archivos
         uploaded_file = self._file_upload.render()
@@ -67,19 +70,20 @@ class SidebarComponent:
         # Usar índice para mantener la selección actual
         current_index = 0
         if (
-            'selected_analysis' in st.session_state and
-            st.session_state.selected_analysis in select_options
+            "selected_analysis" in st.session_state
+            and st.session_state.selected_analysis in select_options
         ):
             current_index = select_options.index(
-                st.session_state.selected_analysis)
+                st.session_state.selected_analysis
+            )
         selected_analysis = st.sidebar.selectbox(
             "Seleccionar análisis",
             select_options,
             index=current_index,
-            key="analysis_selectbox"
+            key="analysis_selectbox",
         )
         # Detectar cambios en el selectbox y actualizar automáticamente
-        if selected_analysis != st.session_state.get('selected_analysis'):
+        if selected_analysis != st.session_state.get("selected_analysis"):
             st.session_state.selected_analysis = selected_analysis
             return selected_analysis
         return None

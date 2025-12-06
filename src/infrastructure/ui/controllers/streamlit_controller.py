@@ -6,13 +6,17 @@ from use_cases.read_file_use_case import ReadFileUseCase
 from use_cases.load_analysis_use_case import LoadAnalysisUseCase
 from use_cases.list_analyses_use_case import ListAnalysesUseCase
 from use_cases.delete_analysis_use_case import DeleteAnalysisUseCase
-from use_cases.prepare_analysis_display_use_case import PrepareAnalysisDisplayUseCase
+from use_cases.prepare_analysis_display_use_case import (
+    PrepareAnalysisDisplayUseCase,
+)
 from use_cases.send_results_email_use_case import SendResultsEmailUseCase
 from use_cases.save_report_use_case import SaveReportUseCase
 from use_cases.list_reports_use_case import ListReportsUseCase
 from use_cases.clear_reports_history_use_case import ClearReportsHistoryUseCase
 from use_cases.delete_report_use_case import DeleteReportUseCase
 from use_cases.update_sentiment_use_case import UpdateSentimentUseCase
+from use_cases.manage_notes_use_case import ManageNotesUseCase
+from use_cases.get_suggestions_use_case import GetSuggestionsUseCase
 from infrastructure.ui.constants import ALL_ANALYSES_OPTION
 import os
 
@@ -37,24 +41,28 @@ class StreamlitController:
         clear_reports_history_use_case: ClearReportsHistoryUseCase,
         delete_report_use_case: DeleteReportUseCase,
         update_sentiment_use_case: UpdateSentimentUseCase,
+        manage_notes_use_case: ManageNotesUseCase,
+        get_suggestions_use_case: GetSuggestionsUseCase,
     ):
         self._read_file_use_case = read_file_use_case
         self._process_file_use_case = process_file_use_case
         self._load_analysis_use_case = load_analysis_use_case
         self._list_analyses_use_case = list_analyses_use_case
         self._delete_analysis_use_case = delete_analysis_use_case
-        self._prepare_analysis_display_use_case = prepare_analysis_display_use_case
+        self._prepare_analysis_display_use_case = (
+            prepare_analysis_display_use_case
+        )
         self._send_results_email_use_case = send_results_email_use_case
         self._save_report_use_case = save_report_use_case
         self._list_reports_use_case = list_reports_use_case
         self._clear_reports_history_use_case = clear_reports_history_use_case
         self._delete_report_use_case = delete_report_use_case
         self._update_sentiment_use_case = update_sentiment_use_case
+        self._manage_notes_use_case = manage_notes_use_case
+        self._get_suggestions_use_case = get_suggestions_use_case
 
     def handle_file_upload(
-        self,
-        uploaded_file,
-        file_basename: str
+        self, uploaded_file, file_basename: str
     ) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Maneja la carga y procesamiento de un archivo.
@@ -69,14 +77,12 @@ class StreamlitController:
         try:
             # Leer el archivo usando el caso de uso
             raw_df = self._read_file_use_case.execute(
-                uploaded_file,
-                uploaded_file.type
+                uploaded_file, uploaded_file.type
             )
 
             # Procesar el archivo (limpiar, analizar y guardar)
             analyzed_df = self._process_file_use_case.execute(
-                raw_df,
-                file_basename
+                raw_df, file_basename
             )
 
             return True, analyzed_df, None
@@ -87,8 +93,7 @@ class StreamlitController:
             return False, None, f"Error inesperado: {str(e)}"
 
     def handle_load_analysis(
-        self,
-        analysis_name: str
+        self, analysis_name: str
     ) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Maneja la carga de un análisis guardado.
@@ -102,9 +107,11 @@ class StreamlitController:
                 return self._handle_load_all_analyses()
             loaded_df = self._load_analysis_use_case.execute(analysis_name)
             if loaded_df.empty:
-                return (False, None,
-                        f"No se encontraron datos para el análisis "
-                        f"'{analysis_name}'.")
+                return (
+                    False,
+                    None,
+                    f"No se encontraron datos para el análisis '{analysis_name}'.",
+                )
             return True, loaded_df, None
         except Exception as e:
             return False, None, f"Error al cargar el análisis: {str(e)}"
@@ -117,10 +124,7 @@ class StreamlitController:
         """
         return self._list_analyses_use_case.execute()
 
-    def handle_delete_analysis(
-        self,
-        analysis_name: str
-    ) -> Tuple[bool, str]:
+    def handle_delete_analysis(self, analysis_name: str) -> Tuple[bool, str]:
         """
         Maneja la eliminación de un análisis.
         Args:
@@ -131,8 +135,7 @@ class StreamlitController:
         return self._delete_analysis_use_case.execute(analysis_name)
 
     def handle_delete_multiple_analyses(
-        self,
-        analysis_names: List[str]
+        self, analysis_names: List[str]
     ) -> Tuple[bool, List[Tuple[str, bool, str]]]:
         """
         Maneja la eliminación de múltiples análisis.
@@ -141,12 +144,10 @@ class StreamlitController:
         Returns:
             Tupla con (éxito general, lista de resultados individuales)
         """
-        return self._delete_analysis_use_case.execute_multiple(
-            analysis_names)
+        return self._delete_analysis_use_case.execute_multiple(analysis_names)
 
     def prepare_analysis_display(
-        self,
-        df: pd.DataFrame
+        self, df: pd.DataFrame
     ) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Prepara un DataFrame para visualización.
@@ -156,13 +157,13 @@ class StreamlitController:
             Tupla con (DataFrame preparado, mapa de colores)
         """
         return self._prepare_analysis_display_use_case.execute(df)
-    
+
     def handle_send_email(
         self,
         to_emails: List[str],
         analysis_name: str,
         df: pd.DataFrame,
-        attachment_type: str = 'excel',
+        attachment_type: str = "excel",
         color_map: Dict[str, str] = None,
         comments_df: pd.DataFrame | None = None,
     ) -> Tuple[bool, str]:
@@ -192,11 +193,13 @@ class StreamlitController:
         self,
         analysis_name: str,
         df: pd.DataFrame,
-        report_format: str = 'pdf',
-        color_map: Dict[str, str] = None
+        report_format: str = "pdf",
+        color_map: Dict[str, str] = None,
     ) -> Tuple[bool, str, str]:
         """Genera y guarda un reporte en historial."""
-        return self._save_report_use_case.execute(analysis_name, df, report_format, color_map)
+        return self._save_report_use_case.execute(
+            analysis_name, df, report_format, color_map
+        )
 
     def get_report_history(self) -> List[dict]:
         """Obtiene historial de reportes guardados."""
@@ -222,7 +225,7 @@ class StreamlitController:
         try:
             if not file_path or not os.path.exists(file_path):
                 return False, None
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 return True, f.read()
         except Exception:
             return False, None
@@ -231,16 +234,16 @@ class StreamlitController:
         self,
         analysis_name: str,
         df: pd.DataFrame,
-        modifications: List[Tuple[int, str]]
+        modifications: List[Tuple[int, str]],
     ) -> Tuple[bool, str, str]:
         """
         Maneja la actualización de etiquetas de sentimiento.
-        
+
         Args:
             analysis_name: Nombre del análisis original
             df: DataFrame con los datos completos
             modifications: Lista de tuplas (índice, nueva_etiqueta)
-        
+
         Returns:
             Tupla con (éxito, nuevo_nombre_análisis, mensaje)
         """
@@ -248,12 +251,18 @@ class StreamlitController:
             return self._update_sentiment_use_case.execute(
                 analysis_id=analysis_name,
                 original_df=df,
-                modifications=modifications
+                modifications=modifications,
             )
         except Exception as e:
-            return False, "", f"Error inesperado al actualizar sentimientos: {str(e)}"
+            return (
+                False,
+                "",
+                f"Error inesperado al actualizar sentimientos: {str(e)}",
+            )
 
-    def _handle_load_all_analyses(self) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
+    def _handle_load_all_analyses(
+        self,
+    ) -> Tuple[bool, Optional[pd.DataFrame], Optional[str]]:
         """
         Carga y consolida todos los análisis guardados en la base de datos.
         Returns:
@@ -262,20 +271,38 @@ class StreamlitController:
         try:
             analysis_names = self._list_analyses_use_case.execute()
             if not analysis_names:
-                return (False, None,
-                        "No hay análisis guardados para consolidar.")
+                return (
+                    False,
+                    None,
+                    "No hay análisis guardados para consolidar.",
+                )
             dataframes = []
             for name in analysis_names:
                 df = self._load_analysis_use_case.execute(name)
                 if df.empty:
                     continue
                 df = df.copy()
-                df['analysis_name'] = name
+                df["analysis_name"] = name
                 dataframes.append(df)
             if not dataframes:
-                return (False, None,
-                        "No se encontraron datos en los análisis guardados.")
+                return (
+                    False,
+                    None,
+                    "No se encontraron datos en los análisis guardados.",
+                )
             combined_df = pd.concat(dataframes, ignore_index=True)
             return True, combined_df, None
         except Exception as e:
             return False, None, f"Error al consolidar los análisis: {str(e)}"
+
+    def get_notes(self, analysis_name: str):
+        return self._manage_notes_use_case.get_notes(analysis_name)
+
+    def add_note(self, analysis_name: str, content: str):
+        return self._manage_notes_use_case.add_note(analysis_name, content)
+
+    def delete_note(self, note_id: int):
+        return self._manage_notes_use_case.delete_note(note_id)
+
+    def get_ai_suggestions(self, df: pd.DataFrame) -> str:
+        return self._get_suggestions_use_case.execute(df)

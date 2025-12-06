@@ -18,3 +18,12 @@ uv sync
 # 4. Ejecutar la aplicación Streamlit
 uv run streamlit run src/app.py
 ```
+
+5. Estándar de codificación
+```
+uv tool run flake8 src
+```
+
+```
+uv tool run ruff check src/ --fix
+```

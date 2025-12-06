@@ -10,7 +10,9 @@ from typing import Any
 import pandas as pd
 
 
-def apply_comments_filters(df: pd.DataFrame, session_state: Any) -> pd.DataFrame:
+def apply_comments_filters(
+    df: pd.DataFrame, session_state: Any
+) -> pd.DataFrame:
     """Aplica filtros y ordenamientos configurados en la UI sobre el DataFrame.
 
     Reglas soportadas (todas opcionales y solo si existen las columnas):
@@ -30,12 +32,18 @@ def apply_comments_filters(df: pd.DataFrame, session_state: Any) -> pd.DataFrame
 
     filtered = df.copy()
 
-    sel_cat = getattr(session_state, 'get', lambda *a, **k: None)("comments_filter_category")
+    sel_cat = getattr(session_state, "get", lambda *a, **k: None)(
+        "comments_filter_category"
+    )
     if sel_cat and sel_cat != "Todas" and "Clasificacion" in filtered.columns:
         filtered = filtered[filtered["Clasificacion"] == sel_cat]
 
-    sort_by_label = getattr(session_state, 'get', lambda *a, **k: None)("comments_sort_by")
-    sort_dir_label = getattr(session_state, 'get', lambda *a, **k: None)("comments_sort_dir")
+    sort_by_label = getattr(session_state, "get", lambda *a, **k: None)(
+        "comments_sort_by"
+    )
+    sort_dir_label = getattr(session_state, "get", lambda *a, **k: None)(
+        "comments_sort_dir"
+    )
     label_to_column = {
         "Calificación": "calificacion",
         "Clasificación": "Clasificacion",
@@ -50,7 +58,9 @@ def apply_comments_filters(df: pd.DataFrame, session_state: Any) -> pd.DataFrame
                 kind="mergesort",
             )
 
-    sel_count = getattr(session_state, 'get', lambda *a, **k: None)("comments_filter_count")
+    sel_count = getattr(session_state, "get", lambda *a, **k: None)(
+        "comments_filter_count"
+    )
     if isinstance(sel_count, int) and sel_count > 0:
         filtered = filtered.head(sel_count)
 

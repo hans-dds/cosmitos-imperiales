@@ -6,15 +6,22 @@ from typing import Optional
 from pandas.tseries.offsets import DateOffset
 from logging import getLogger
 
-from infrastructure.ui.controllers.streamlit_controller import \
-    StreamlitController
-from infrastructure.ui.components.analysis_state_manager import \
-    AnalysisStateManager
+from infrastructure.ui.controllers.streamlit_controller import (
+    StreamlitController,
+)
+from infrastructure.ui.components.analysis_state_manager import (
+    AnalysisStateManager,
+)
 from infrastructure.ui.components.charts_component import ChartsComponent
 from infrastructure.ui.components.table_component import TableComponent
 from infrastructure.ui.components.export_component import ExportComponent
-from infrastructure.ui.components.word_cloud_component import \
-    WordCloudComponent
+from infrastructure.ui.components.word_cloud_component import (
+    WordCloudComponent,
+)
+from infrastructure.ui.components.notes_component import NotesComponent
+from infrastructure.ui.components.ai_suggestions_component import (
+    AISuggestionsComponent,
+)
 
 
 class MainContent:
@@ -36,13 +43,11 @@ class MainContent:
         self._export = ExportComponent(controller)
         self._word_cloud = WordCloudComponent()
         self.logger = getLogger(__name__)
-        self.logger.setLevel('INFO')
+        self.logger.setLevel("INFO")
+        self._notes_component = NotesComponent()
+        self._ai_component = AISuggestionsComponent()
 
-    def render(
-        self,
-        uploaded_file,
-        analysis_to_load: Optional[str]
-    ):
+    def render(self, uploaded_file, analysis_to_load: Optional[str]):
         """
         Renderiza el contenido principal de la página.
         Args:
@@ -59,6 +64,19 @@ class MainContent:
             self._handle_load_analysis(analysis_to_load)
         # Mostrar contenido del análisis actual
         self._render_analysis_display()
+        # Mostrar Sugerencias y Notas
+        if (
+            "df_display" in st.session_state
+            and st.session_state.selected_analysis
+        ):
+            current_df = st.session_state.df_display
+            current_name = st.session_state.selected_analysis
+
+            # Renderizar Sugerencia con IA
+            self._ai_component.render(self._controller, current_df)
+
+            # Renderizar Notas
+            self._notes_component.render(self._controller, current_name)
 
     def _handle_file_upload(self, uploaded_file):
         """
@@ -70,25 +88,23 @@ class MainContent:
         # Verificar si este archivo ya fue procesado
         if self._state_manager.is_file_already_processed(file_id):
             return
-        file_basename = uploaded_file.name.split('.')[0]
+        file_basename = uploaded_file.name.split(".")[0]
         with st.spinner(
-                "Procesando archivo... Esto puede tardar unos segundos."):
-            success, analyzed_df, error_message = \
+            "Procesando archivo... Esto puede tardar unos segundos."
+        ):
+            success, analyzed_df, error_message = (
                 self._controller.handle_file_upload(
-                    uploaded_file,
-                    file_basename
+                    uploaded_file, file_basename
                 )
+            )
         if success and analyzed_df is not None:
             new_analysis_name = f"analisis_{file_basename}"
             st.success(
-                f"Archivo '{uploaded_file.name}' procesado y guardado "
-                "exitosamente."
+                f"Archivo '{uploaded_file.name}' procesado y guardado exitosamente."
             )
             # Establecer el nuevo análisis
             self._state_manager.set_new_analysis(
-                new_analysis_name,
-                analyzed_df,
-                file_id
+                new_analysis_name, analyzed_df, file_id
             )
             # Limpiar selecciones de eliminación
             self._state_manager.clear_delete_selection()
@@ -96,7 +112,8 @@ class MainContent:
             st.rerun()
         else:
             st.error(
-                f"Ocurrió un error al procesar el archivo: {error_message}")
+                f"Ocurrió un error al procesar el archivo: {error_message}"
+            )
             self._state_manager.clear_processed_file_flag()
 
     def _handle_load_analysis(self, analysis_to_load: Optional[str]):
@@ -105,14 +122,13 @@ class MainContent:
         Args:
             analysis_to_load: Nombre del análisis a cargar
         """
-        selected_analysis = st.session_state.get('selected_analysis')
+        selected_analysis = st.session_state.get("selected_analysis")
         analysis_name = analysis_to_load or selected_analysis
         if not analysis_name:
             return
-        success, loaded_df, error_message = \
-            self._controller.handle_load_analysis(
-                analysis_name
-            )
+        success, loaded_df, error_message = (
+            self._controller.handle_load_analysis(analysis_name)
+        )
         if success and loaded_df is not None:
             self._state_manager.set_loaded_analysis(analysis_name, loaded_df)
         else:
@@ -130,28 +146,28 @@ class MainContent:
         st.header(analysis_name)
         # Preparar DataFrame para visualización usando el caso de uso
         df_prepared, color_map = self._controller.prepare_analysis_display(
-            df_to_show)
+            df_to_show
+        )
         # Aplicar filtros de rango de fechas (por mes/año) antes de renderizar
         df_filtered = self._apply_monthly_date_filter(df_prepared)
         self.logger.info(f"DataFrame filtrado: {df_filtered}")
         # Renderizar componentes
         self._charts.render(df_filtered, color_map)
         self._word_cloud.render(df_filtered)
-        
+
         # Renderizar tabla editable y manejar guardado
-        self._render_editable_table_with_save(df_filtered, analysis_name, color_map)
-        
+        self._render_editable_table_with_save(
+            df_filtered, analysis_name, color_map
+        )
+
         self._export.render(df_filtered, analysis_name, color_map)
 
     def _render_editable_table_with_save(
-        self, 
-        df: pd.DataFrame, 
-        analysis_name: str,
-        color_map: dict
+        self, df: pd.DataFrame, analysis_name: str, color_map: dict
     ):
         """
         Renderiza tabla editable con botón de guardar cambios.
-        
+
         Args:
             df: DataFrame filtrado a mostrar
             analysis_name: Nombre del análisis actual
@@ -159,32 +175,41 @@ class MainContent:
         """
         # Renderizar tabla editable
         edited_df, has_changes = self._table.render_editable(df)
-        
+
         # Mostrar botón de guardar si hay cambios
         if has_changes:
-            st.info("⚠️ Se han detectado cambios en las etiquetas de clasificación.")
-            
-            col1, col2 = st.columns([1, 4])
-            with col1:
-                if st.button("💾 Guardar cambios", type="primary", use_container_width=True):
+            st.info(
+                "⚠️ Se han detectado cambios en las etiquetas de clasificación."
+            )
+            # Centrar el botón debajo de la tabla
+            left, center, right = st.columns([1, 2, 1])
+            with center:
+                if st.button(
+                    "💾 Guardar cambios",
+                    type="primary",
+                    use_container_width=True,
+                    key="save_changes_button",
+                ):
                     self._handle_sentiment_update(
                         analysis_name=analysis_name,
                         original_df=df,
-                        edited_df=edited_df
+                        edited_df=edited_df,
                     )
         else:
             # Mensaje informativo cuando no hay cambios
-            st.caption("💡 Puedes editar las clasificaciones usando los menús desplegables de la tabla.")
-    
+            st.caption(
+                "💡 Puedes editar las clasificaciones usando los menús desplegables de la tabla."
+            )
+
     def _handle_sentiment_update(
         self,
         analysis_name: str,
         original_df: pd.DataFrame,
-        edited_df: pd.DataFrame
+        edited_df: pd.DataFrame,
     ):
         """
         Maneja la actualización de sentimientos modificados.
-        
+
         Args:
             analysis_name: Nombre del análisis original
             original_df: DataFrame original con columnas en español
@@ -192,57 +217,59 @@ class MainContent:
         """
         # Revertir el mapeo de nombres de columnas
         reverse_mapping = {
-            'Calificación': 'calificacion',
-            'Comentario': 'comentarios',
-            'Clasificación': 'Clasificacion',
-            'Fiabilidad': 'Fiabilidad'
+            "Calificación": "calificacion",
+            "Comentario": "comentarios",
+            "Clasificación": "Clasificacion",
+            "Fiabilidad": "Fiabilidad",
         }
-        
+
         # Renombrar columnas del DataFrame editado a nombres originales
         edited_df_original_names = edited_df.rename(columns=reverse_mapping)
-        
+
         # Detectar modificaciones comparando DataFrames
         modifications = []
-        
+
         # Usar los índices del DataFrame original
         for idx in original_df.index:
             # Buscar el índice correspondiente en el DataFrame editado
             # (pueden ser diferentes después de filtros)
             if idx in edited_df_original_names.index:
-                original_label = original_df.at[idx, 'Clasificacion']
-                new_label = edited_df_original_names.at[idx, 'Clasificacion']
-                
+                original_label = original_df.at[idx, "Clasificacion"]
+                new_label = edited_df_original_names.at[idx, "Clasificacion"]
+
                 if original_label != new_label:
                     modifications.append((idx, new_label))
-        
+
         if not modifications:
             st.warning("No se detectaron cambios reales para guardar.")
             return
-        
+
         # Obtener el DataFrame completo sin filtros desde el estado
         full_df = self._state_manager.get_current_analysis()
-        
+
         # Llamar al controlador para procesar la actualización
         with st.spinner("Guardando cambios y creando nuevo análisis..."):
-            success, new_analysis_name, message = self._controller.handle_update_sentiment(
-                analysis_name=analysis_name,
-                df=full_df,
-                modifications=modifications
+            success, new_analysis_name, message = (
+                self._controller.handle_update_sentiment(
+                    analysis_name=analysis_name,
+                    df=full_df,
+                    modifications=modifications,
+                )
             )
-        
+
         if success:
             st.success(f"✅ {message}")
             st.info(f"📊 Nuevo análisis creado: **{new_analysis_name}**")
-            
+
             # Limpiar estado de edición
-            if 'original_df_for_edit' in st.session_state:
-                del st.session_state['original_df_for_edit']
-            
+            if "original_df_for_edit" in st.session_state:
+                del st.session_state["original_df_for_edit"]
+
             # Recargar el análisis para mostrar los cambios
             st.rerun()
         else:
             st.error(f"❌ Error al guardar cambios: {message}")
-    
+
     def _apply_monthly_date_filter(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Aplica un filtro de fechas por mes/año al DataFrame según la
@@ -254,7 +281,7 @@ class MainContent:
         Returns:
             DataFrame filtrado por rango de fechas
         """
-        if 'fecha' not in df.columns:
+        if "fecha" not in df.columns:
             st.info(
                 "Este análisis no contiene información de fechas. "
                 "El filtro por rango mensual no se aplicará."
@@ -262,8 +289,8 @@ class MainContent:
             return df
         # Asegurar tipo datetime
         df = df.copy()
-        df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
-        if df['fecha'].isna().all():
+        df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+        if df["fecha"].isna().all():
             st.info(
                 "No se pudo interpretar ninguna fecha válida en la columna "
                 "'fecha'. Se mostrará la información completa sin filtrar "
@@ -271,11 +298,11 @@ class MainContent:
             )
             return df
         # Normalizar a inicio de mes para trabajar solo con mes/año
-        df['mes'] = df['fecha'].dt.to_period('M').dt.to_timestamp()
+        df["mes"] = df["fecha"].dt.to_period("M").dt.to_timestamp()
         # Validar rango disponible de meses en los datos
-        min_month = df['mes'].min()
-        max_month = df['mes'].max()
-        unique_months = sorted(df['mes'].dropna().unique())
+        min_month = df["mes"].min()
+        max_month = df["mes"].max()
+        unique_months = sorted(df["mes"].dropna().unique())
         total_months = len(unique_months)
         if pd.isna(min_month) or pd.isna(max_month):
             return df
@@ -291,7 +318,7 @@ class MainContent:
                 "Personalizado",
             ],
             index=0,
-            help="Selecciona un rango temporal basado en meses."
+            help="Selecciona un rango temporal basado en meses.",
         )
         # Valores por defecto para fecha_inicio/fecha_fin en controles
         # personalizados
@@ -332,31 +359,33 @@ class MainContent:
                     "Mes/Año inicio",
                     value=default_start,
                     help="Selecciona cualquier día del mes; solo se usará el "
-                         "mes y año."
+                    "mes y año.",
                 )
             with col2:
                 fecha_fin = st.date_input(
                     "Mes/Año fin",
                     value=default_end,
                     help="Selecciona cualquier día del mes; solo se usará el "
-                         "mes y año."
+                    "mes y año.",
                 )
         # Normalizar fechas seleccionadas a primer día de mes
-        start_month = pd.to_datetime(
-            fecha_inicio).to_period('M').to_timestamp()
-        end_month = pd.to_datetime(fecha_fin).to_period('M').to_timestamp()
+        start_month = (
+            pd.to_datetime(fecha_inicio).to_period("M").to_timestamp()
+        )
+        end_month = pd.to_datetime(fecha_fin).to_period("M").to_timestamp()
         if start_month > end_month:
             st.warning(
                 "La fecha de inicio es posterior a la fecha de fin. "
-                "Se mostrará el rango completo.")
+                "Se mostrará el rango completo."
+            )
             start_month, end_month = min_month, max_month
         # Aplicar filtro manteniendo el orden cronológico por fecha
-        mask = (df['mes'] >= start_month) & (df['mes'] <= end_month)
-        filtered_df = df[mask].sort_values('fecha')
+        mask = (df["mes"] >= start_month) & (df["mes"] <= end_month)
+        filtered_df = df[mask].sort_values("fecha")
         st.caption(
             f"Mostrando datos desde {start_month.strftime('%Y-%m')} "
             f"hasta {end_month.strftime('%Y-%m')} "
             f"({len(filtered_df)} registros)."
         )
         # Eliminar columna auxiliar antes de devolver
-        return filtered_df.drop(columns=['mes'])
+        return filtered_df.drop(columns=["mes"])

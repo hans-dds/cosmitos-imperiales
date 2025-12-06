@@ -1,0 +1,73 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    branches: [ main, bugfix ]
+    tags: [ 'v*.*.*' ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/hans-dds/cosmitos-imperiales
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Load image to Docker (for smoke test)
+        run: |
+          docker build -t ghcr.io/hans-dds/cosmitos-imperiales:test .
+
+      - name: Smoke test container
+        run: |
+          docker run -d --rm --name cosmitos_app -p 8501:8501 ghcr.io/hans-dds/cosmitos-imperiales:test
+          echo "Waiting for app to start..."
+          for i in $(seq 1 30); do
+            sleep 2
+            if curl -fsS http://localhost:8501/ >/dev/null; then
+              echo "App responded on 8501"
+              break
+            fi
+          done
+          curl -fsS http://localhost:8501/ >/dev/null || (echo "App did not start" && docker logs cosmitos_app && exit 1)
+          docker stop cosmitos_app
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          load: true       # carga imagen local para smoke test
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
