@@ -231,8 +231,13 @@ class TableComponent:
         # Renombrar columnas para mostrar
         df_renamed = df_to_edit.rename(columns=column_mapping)
 
-        # Guardar estado original si no existe
-        if 'original_df_for_edit' not in st.session_state:
+        # Guardar o resetear estado original cuando cambia el contenido mostrado
+        prev_original = st.session_state.get('original_df_for_edit')
+        if (
+            prev_original is None
+            or prev_original.shape != df_renamed.shape
+            or not prev_original.equals(df_renamed)
+        ):
             st.session_state['original_df_for_edit'] = df_renamed.copy()
 
         # Configurar columna editable con dropdown
@@ -260,7 +265,13 @@ class TableComponent:
         if 'Clasificación' in edited_df.columns and 'Clasificación' in st.session_state['original_df_for_edit'].columns:
             original_classifications = st.session_state['original_df_for_edit']['Clasificación'].values
             current_classifications = edited_df['Clasificación'].values
-            has_changes = not (original_classifications == current_classifications).all()
+
+            # Si las longitudes difieren, hay cambios (p.ej. cambió el slider)
+            if len(original_classifications) != len(current_classifications):
+                has_changes = True
+            else:
+                # Comparar de forma segura cuando las longitudes coinciden
+                has_changes = not (original_classifications == current_classifications).all()
 
         return edited_df, has_changes
 

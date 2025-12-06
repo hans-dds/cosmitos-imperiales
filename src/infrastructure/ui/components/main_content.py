@@ -177,10 +177,10 @@ class MainContent:
         # Mostrar botón de guardar si hay cambios
         if has_changes:
             st.info("⚠️ Se han detectado cambios en las etiquetas de clasificación.")
-            
-            col1, col2 = st.columns([1, 4])
-            with col1:
-                if st.button("💾 Guardar cambios", type="primary", use_container_width=True):
+            # Centrar el botón debajo de la tabla
+            left, center, right = st.columns([1, 2, 1])
+            with center:
+                if st.button("💾 Guardar cambios", type="primary", use_container_width=True, key="save_changes_button"):
                     self._handle_sentiment_update(
                         analysis_name=analysis_name,
                         original_df=df,

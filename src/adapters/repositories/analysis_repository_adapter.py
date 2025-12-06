@@ -41,6 +41,8 @@ class SQLandCSVAnalysisRepository(IAnalysisRepository):
                     if not all(c.isalnum() or c == '_' for c in table_name):
                         return False, f"Nombre de tabla inválido: {table_name}"
                     self._ensure_table_exists(cursor, table_name)
+                    # Sobrescribir contenido previo del análisis para evitar duplicados
+                    cursor.execute(f"TRUNCATE TABLE `{table_name}`")
                     base_columns = ["comentarios", "calificacion", "Clasificacion", "Fiabilidad"]
                     insert_columns = list(base_columns)
                     has_fecha = 'fecha' in data.columns
