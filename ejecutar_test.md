@@ -4,6 +4,9 @@ cd sonarqube/ && podman-compose up -d
 # Ejecutar test
 cd .. && uv run pytest --cov=src --cov-report=xml:coverage.xml tests/ -q
 
+# Arreglar los paths del coverage
+sed -i "s|$(pwd)|/usr/src|g" coverage.xml
+
 # Ejecutar SonarQube Scanner
 podman run \
     --rm \
