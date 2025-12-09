@@ -34,3 +34,5 @@ uv.lock
 .idea/
 .ruff_cache/
 .pytest_cache/
+
+*.log
