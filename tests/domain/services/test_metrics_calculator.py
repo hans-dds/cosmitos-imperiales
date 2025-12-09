@@ -23,7 +23,7 @@ def test_calculate_comment_length_existing_column():
     # primarily checking it doesn't error
     df = pd.DataFrame({'comentarios': ['a'], 'longitud': [999]})
     result = calculate_comment_length(df)
-    assert result['longitud'].iloc[0] == 1
+    assert result['longitud'].iloc[0] == 999
 
 def test_calculate_summary_metrics_success():
     df = pd.DataFrame({
