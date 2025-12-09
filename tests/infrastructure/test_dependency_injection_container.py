@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
-import os
+from unittest.mock import patch
 
 # Mock settings before importing the container to avoid side effects during import
 with patch('infrastructure.config.settings') as mock_settings:
@@ -18,31 +17,41 @@ with patch('infrastructure.config.settings') as mock_settings:
     mock_settings.EMAIL_FROM = 'test@test.com'
     mock_settings.EXCEL_REQUIRED_SHEETS = ['Sheet1']
     mock_settings.APP_TITLE = "Test App"
-    
+
     # We also need to mock the adapters that the container initializes in __init__
     # to avoid real DB connections or file operations during test instantiation
     with patch('infrastructure.dependency_injection_container.SQLandCSVAnalysisRepository'), \
-         patch('infrastructure.dependency_injection_container.SQLReportRepository'), \
-         patch('infrastructure.dependency_injection_container.JoblibSentimentAnalyzer'), \
-         patch('infrastructure.dependency_injection_container.PandasDataCleaner'), \
-         patch('infrastructure.dependency_injection_container.PandasFileReader'), \
-         patch('infrastructure.dependency_injection_container.SmtpEmailSender'), \
-         patch('infrastructure.dependency_injection_container.SQLNoteRepository'), \
-         patch('infrastructure.dependency_injection_container.GeminiAdvisorAdapter'):
-         
-        from infrastructure.dependency_injection_container import Container, container
+            patch('infrastructure.dependency_injection_container.SQLReportRepository'), \
+            patch('infrastructure.dependency_injection_container.JoblibSentimentAnalyzer'), \
+            patch('infrastructure.dependency_injection_container.PandasDataCleaner'), \
+            patch('infrastructure.dependency_injection_container.PandasFileReader'), \
+            patch('infrastructure.dependency_injection_container.SmtpEmailSender'), \
+            patch('infrastructure.dependency_injection_container.SQLNoteRepository'), \
+            patch('infrastructure.dependency_injection_container.GeminiAdvisorAdapter'):
+
+        from infrastructure.dependency_injection_container import Container
+
 
 @pytest.fixture
 def mock_container_deps():
     """Patches all external dependencies instantiated by Container.__init__"""
-    with patch('infrastructure.dependency_injection_container.SQLandCSVAnalysisRepository') as repo, \
-         patch('infrastructure.dependency_injection_container.SQLReportRepository') as report_repo, \
-         patch('infrastructure.dependency_injection_container.JoblibSentimentAnalyzer') as analyzer, \
-         patch('infrastructure.dependency_injection_container.PandasDataCleaner') as cleaner, \
-         patch('infrastructure.dependency_injection_container.PandasFileReader') as reader, \
-         patch('infrastructure.dependency_injection_container.SmtpEmailSender') as sender, \
-         patch('infrastructure.dependency_injection_container.SQLNoteRepository') as note_repo, \
-         patch('infrastructure.dependency_injection_container.GeminiAdvisorAdapter') as advisor:
+    with patch(
+        'infrastructure.dependency_injection_container.SQLandCSVAnalysisRepository'
+    ) as repo, patch(
+        'infrastructure.dependency_injection_container.SQLReportRepository'
+    ) as report_repo, patch(
+        'infrastructure.dependency_injection_container.JoblibSentimentAnalyzer'
+    ) as analyzer, patch(
+        'infrastructure.dependency_injection_container.PandasDataCleaner'
+    ) as cleaner, patch(
+        'infrastructure.dependency_injection_container.PandasFileReader'
+    ) as reader, patch(
+        'infrastructure.dependency_injection_container.SmtpEmailSender'
+    ) as sender, patch(
+        'infrastructure.dependency_injection_container.SQLNoteRepository'
+    ) as note_repo, patch(
+        'infrastructure.dependency_injection_container.GeminiAdvisorAdapter'
+    ) as advisor:
         yield {
             'repo': repo,
             'report_repo': report_repo,
@@ -54,26 +63,28 @@ def mock_container_deps():
             'advisor': advisor
         }
 
+
 def test_container_initialization(mock_container_deps):
     """Test that container initializes all adapters with correct config."""
-    c = Container()
-    
+    Container()
+
     # Check Analysis Repository init
     mock_container_deps['repo'].assert_called()
-    
+
     # Check Sentiment Analyzer init
     mock_container_deps['analyzer'].assert_called()
-    
+
     # Check Report Repository init
     mock_container_deps['report_repo'].assert_called()
+
 
 def test_use_cases_creation(mock_container_deps):
     """Test that all use case properties return valid instances."""
     c = Container()
-    
+
     # Just accessing the property should create the use case without error
     # We verify it's not None and checks types if strictly needed (implicit by import)
-    
+
     assert c.process_file_use_case is not None
     assert c.list_analyses_use_case is not None
     assert c.load_analysis_use_case is not None
@@ -88,7 +99,8 @@ def test_use_cases_creation(mock_container_deps):
     assert c.update_sentiment_use_case is not None
     assert c.manage_notes_use_case is not None
     assert c.get_suggestions_use_case is not None
-    
+
+
 def test_streamlit_controller_creation(mock_container_deps):
     """Test that streamlit_controller is created with all dependencies."""
     c = Container()

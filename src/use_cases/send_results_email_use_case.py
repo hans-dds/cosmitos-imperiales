@@ -40,7 +40,9 @@ class SendResultsEmailUseCase:
             df: DataFrame con los datos del análisis.
             attachment_type: Tipo de adjunto ('excel' o 'pdf').
             color_map: Mapa de colores (necesario para PDF).
-            comments_df: Subconjunto filtrado/ordenado de comentarios (usado para PDF y Excel para reflejar filtros de UI). Si es None, se usan todos.
+            comments_df: Subconjunto filtrado/ordenado de comentarios (usado
+                para PDF y Excel para reflejar filtros de UI). Si es None,
+                se usan todos.
 
         Returns:
             Tupla (exito, mensaje).
@@ -104,7 +106,8 @@ El equipo de Cosmitos Imperiales
             else:
                 return (
                     False,
-                    "Error al enviar el correo. Revisa los logs para más detalles.",
+                    "Error al enviar reporte por email. "
+                    "Verifique logs del servidor.",
                 )
 
         except Exception as e:

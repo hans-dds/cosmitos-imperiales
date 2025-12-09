@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 100
+count = True
+statistics = True
+exclude = .venv,.git,__pycache__,docs/source/conf.py,old,build,dist

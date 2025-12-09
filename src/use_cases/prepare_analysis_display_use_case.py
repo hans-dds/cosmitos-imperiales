@@ -15,6 +15,7 @@ class PrepareAnalysisDisplayUseCase:
     """
     Caso de uso para preparar datos de análisis para visualización.
     """
+
     def execute(
             self,
             df: pd.DataFrame) -> Tuple[pd.DataFrame,

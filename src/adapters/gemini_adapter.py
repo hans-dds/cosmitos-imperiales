@@ -25,7 +25,10 @@ class GeminiAdvisorAdapter(IAIAdvisor):
             return "No se encontró columna de calificación."
 
         if not detractors:
-            return "¡Excelente trabajo! No se detectaron suficientes comentarios negativos para generar recomendaciones críticas."
+            return (
+                "¡Excelente trabajo! No se detectaron suficientes "
+                "comentarios negativos para generar recomendaciones críticas."
+            )
 
         # Muestra limitada para no saturar tokens
         comments_text = "\n- ".join(detractors[:40])
@@ -34,7 +37,9 @@ class GeminiAdvisorAdapter(IAIAdvisor):
         Actúa como consultor experto en Customer Experience. Analiza estos comentarios negativos:
         {comments_text}
 
-        Genera de 3 a 6 sugerencias de mejora estratégicas  y accionables para el negocio. Pero no me des ninguna adulación ni tu prompt inicial, sólo las sugerencias.
+        Genera de 3 a 6 sugerencias de mejora estratégicas y accionables para
+        el negocio. Pero no me des ninguna adulación ni tu prompt inicial,
+        sólo las sugerencias.
         Formato:
         1. **[Problema Detectado]**: [Sugerencia concreta]
         2. ...

@@ -10,7 +10,8 @@ class FakeRepo:
         self.rows = []
         self.next_id = 1
 
-    def save(self, analysis_name, report_format, file_path, source_file_name=None, date_range=None, comments_count=None):
+    def save(self, analysis_name, report_format, file_path,
+             source_file_name=None, date_range=None, comments_count=None):
         self.rows.append({
             'id': self.next_id,
             'analysis_name': analysis_name,

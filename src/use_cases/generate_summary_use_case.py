@@ -13,6 +13,7 @@ class GenerateSummaryUseCase:
     """
     Caso de uso para generar un resumen de análisis.
     """
+
     def execute(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Genera un DataFrame de resumen agrupado por clasificación.

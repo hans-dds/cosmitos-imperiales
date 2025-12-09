@@ -81,7 +81,10 @@ class SQLReportRepository(IReportRepository):
                 with conn.cursor() as cursor:
                     cursor.execute(
                         """
-                        INSERT INTO report_history (analysis_name, report_format, file_path, source_file_name, date_range, comments_count)
+                        INSERT INTO report_history (
+                            analysis_name, report_format, file_path,
+                            source_file_name, date_range, comments_count
+                        )
                         VALUES (%s, %s, %s, %s, %s, %s)
                         """,
                         (
@@ -101,7 +104,11 @@ class SQLReportRepository(IReportRepository):
     def list(self) -> List[dict]:
         try:
             with mysql.connector.connect(**self._db_config) as conn:
-                query = "SELECT id, analysis_name, report_format, file_path, source_file_name, date_range, comments_count, created_at FROM report_history ORDER BY created_at DESC"
+                query = (
+                    "SELECT id, analysis_name, report_format, file_path, "
+                    "source_file_name, date_range, comments_count, created_at "
+                    "FROM report_history ORDER BY created_at DESC"
+                )
                 rows = []
                 with conn.cursor(dictionary=True) as cursor:
                     cursor.execute(query)
@@ -115,7 +122,9 @@ class SQLReportRepository(IReportRepository):
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor(dictionary=True) as cursor:
                     cursor.execute(
-                        "SELECT id, analysis_name, report_format, file_path, source_file_name, date_range, comments_count, created_at FROM report_history WHERE id=%s",
+                        "SELECT id, analysis_name, report_format, file_path, "
+                        "source_file_name, date_range, comments_count, "
+                        "created_at FROM report_history WHERE id=%s",
                         (report_id,),
                     )
                     row = cursor.fetchone()

@@ -1,10 +1,10 @@
-import pytest
 from domain.services.word_cloud_service import (
-    get_custom_stopwords, 
-    normalize_comment, 
-    build_corpus, 
+    get_custom_stopwords,
+    normalize_comment,
+    build_corpus,
     get_stopwords
 )
+
 
 def test_get_custom_stopwords():
     sw = get_custom_stopwords()
@@ -12,6 +12,7 @@ def test_get_custom_stopwords():
     assert "cliente" in sw
     assert "gracias" in sw
     assert "vehiculo" in sw
+
 
 def test_normalize_comment():
     # Test basic normalization
@@ -25,11 +26,13 @@ def test_normalize_comment():
     # Test numbers kept
     assert normalize_comment("modelo 2023") == "modelo 2023"
 
+
 def test_build_corpus():
     comments = ["Hola Mundo", "  Prueba  ", ""]
     # Should filter empty, normalize others and join
     corpus = build_corpus(comments)
     assert corpus == "hola mundo prueba"
+
 
 def test_get_stopwords():
     sw = get_stopwords()
