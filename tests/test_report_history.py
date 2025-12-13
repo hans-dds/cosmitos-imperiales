@@ -10,13 +10,17 @@ class FakeRepo:
         self.rows = []
         self.next_id = 1
 
-    def save(self, analysis_name, report_format, file_path):
+    def save(self, analysis_name, report_format, file_path,
+             source_file_name=None, date_range=None, comments_count=None):
         self.rows.append({
             'id': self.next_id,
             'analysis_name': analysis_name,
             'report_format': report_format,
             'file_path': file_path,
-            'created_at': '2025-11-30 00:00:00'
+            'created_at': '2025-11-30 00:00:00',
+            'source_file_name': source_file_name,
+            'date_range': date_range,
+            'comments_count': comments_count,
         })
         self.next_id += 1
         return True, "Reporte guardado en historial"
@@ -53,8 +57,8 @@ def test_save_report_excel(tmp_path):
 
 def test_list_reports():
     repo = FakeRepo()
-    repo.save('a', 'pdf', '/x')
-    repo.save('b', 'excel', '/y')
+    repo.save('a', 'pdf', '/x', None, None, None)
+    repo.save('b', 'excel', '/y', None, None, None)
     lister = ListReportsUseCase(report_repository=repo)
     items = lister.execute()
     assert len(items) == 2

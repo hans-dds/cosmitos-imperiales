@@ -65,7 +65,10 @@ class SmtpEmailSender:
                 # Determine MIME type
                 content_type = "application/octet-stream"
                 if attachment_path.endswith(".xlsx"):
-                    content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    content_type = (
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    )
                 elif attachment_path.endswith(".pdf"):
                     content_type = "application/pdf"
 
@@ -96,7 +99,8 @@ class SmtpEmailSender:
             # Conexión al servidor SMTP
             # Nota: Para servidores reales (Gmail, Outlook), se requeriría starttls() y login()
             # Aquí asumimos una configuración que puede variar.
-            # Implementación básica compatible con servidor de depuración (localhost) y servidores con auth.
+            # Implementación básica compatible con servidor de depuración (localhost)
+            # y servidores con auth.
 
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 # server.set_debuglevel(1) # Descomentar para debug

@@ -31,6 +31,14 @@ sent_emails/
 
 uv.lock
 
+*.lock
+
+coverage.xml
+
+.coverage
+
 .idea/
 .ruff_cache/
 .pytest_cache/
+
+*.log

@@ -11,7 +11,7 @@ import streamlit as st
 
 from infrastructure.dependency_injection_container import container
 from infrastructure.ui.config import config_page
-from infrastructure.ui.sidebar import show_sidebar
+from infrastructure.ui.components.sidebar_component import SidebarComponent
 from infrastructure.ui.components.main_content import MainContent
 
 
@@ -32,7 +32,8 @@ def main():
     controller = container.streamlit_controller
 
     # Renderizar barra lateral y obtener entrada del usuario
-    uploaded_file, analysis_to_load = show_sidebar(controller)
+    sidebar = SidebarComponent(controller)
+    uploaded_file, analysis_to_load = sidebar.render()
 
     # Renderizar contenido principal
     main_content = MainContent(controller)

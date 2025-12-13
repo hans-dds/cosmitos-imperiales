@@ -37,7 +37,8 @@ class SQLNoteRepository(INoteRepository):
             with mysql.connector.connect(**self._db_config) as conn:
                 with conn.cursor(dictionary=True) as cursor:
                     self._ensure_table_exists(cursor)
-                    sql = "SELECT * FROM report_notes WHERE analysis_name = %s ORDER BY created_at DESC"
+                    sql = ("SELECT * FROM report_notes "
+                           "WHERE analysis_name = %s ORDER BY created_at DESC")
                     cursor.execute(sql, (analysis_name,))
                     return cursor.fetchall()
         except Error:

@@ -13,6 +13,7 @@ class WordCloudComponent:
     """
     Componente responsable de renderizar la nube de palabras.
     """
+
     def render(self, df: pd.DataFrame, max_words: int = 120):
         """
         Renderiza una nube de palabras para los comentarios del DataFrame.

@@ -10,6 +10,7 @@ class FileUploadComponent:
     """
     Componente que maneja la UI y lógica de carga de archivos.
     """
+
     def render(self) -> Optional[object]:
         """
         Renderiza el componente de carga de archivos.

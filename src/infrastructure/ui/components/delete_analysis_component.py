@@ -113,7 +113,8 @@ class DeleteAnalysisComponent:
                 use_container_width=True,
                 key="cancel_delete_btn"
             )
-        # Ejecutar acciones fuera del contexto de las columnas para que los mensajes ocupen todo el ancho
+        # Ejecutar acciones fuera del contexto de las columnas para que los
+        # mensajes ocupen todo el ancho
         if confirm_btn:
             self._execute_deletion()
         if cancel_btn:

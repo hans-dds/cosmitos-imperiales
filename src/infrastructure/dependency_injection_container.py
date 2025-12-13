@@ -199,27 +199,6 @@ class Container:
         )
 
     @property
-    def streamlit_controller(self) -> StreamlitController:
-        """
-        Crea y devuelve una instancia de StreamlitController con todas las
-        dependencias inyectadas.
-        """
-        return StreamlitController(
-            read_file_use_case=self.read_file_use_case,
-            process_file_use_case=self.process_file_use_case,
-            load_analysis_use_case=self.load_analysis_use_case,
-            list_analyses_use_case=self.list_analyses_use_case,
-            delete_analysis_use_case=self.delete_analysis_use_case,
-            prepare_analysis_display_use_case=self.prepare_analysis_display_use_case,
-            send_results_email_use_case=self.send_results_email_use_case,
-            save_report_use_case=self.save_report_use_case,
-            list_reports_use_case=self.list_reports_use_case,
-            clear_reports_history_use_case=self.clear_reports_history_use_case,
-            delete_report_use_case=self.delete_report_use_case,
-            update_sentiment_use_case=self.update_sentiment_use_case,
-        )
-
-    @property
     def manage_notes_use_case(self) -> ManageNotesUseCase:
         return ManageNotesUseCase(self._note_repository)
 
